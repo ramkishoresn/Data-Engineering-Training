@@ -1,0 +1,31 @@
+CREATE DATABASE company_db;
+USE company_db;
+
+CREATE TABLE employees (
+Employee_ID INT PRIMARY KEY auto_increment,
+First_Name VARCHAR(50) NOT NULL,
+Last_Name VARCHAR(50) NOT NULL,
+age INT,
+department VARCHAR(50),
+salary DECIMAL(10,2)
+);
+
+INSERT INTO employees (First_Name,Last_Name, age, department,salary)
+VALUES
+('Ram','Kishore',21,'IT',50000),
+('Ankit','Sharma',24,'HR',55000),
+('Arun','Kumar',26,'Finance',40000),
+('Gopal','Varma',35,'Sales',35000),
+('Raj','Gupta',40,'IT',48000);
+
+SELECT * FROM employees;
+
+SELECT First_Name, department,salary FROM employees;
+
+SELECT * FROM employees WHERE department= 'IT';
+
+
+UPDATE employees
+SET department = 'Accounts' WHERE department = 'Finance';
+
+DELETE FROM employees WHERE department = 'HR';
