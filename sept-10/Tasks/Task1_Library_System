@@ -1,0 +1,217 @@
+use libraryDB
+
+switched to db libraryDB
+
+db.books.insertMany([
+{ title: "The Alchemist", author: "Paulo Coelho", genre: "Fiction", year: 1988,
+available: true },
+{ title: "Clean Code", author: "Robert C. Martin", genre: "Programming", year: 2008,
+available: true },
+{ title: "The Pragmatic Programmer", author: "Andrew Hunt", genre: "Programming",
+year: 1999, available: false },
+{ title: "Sapiens", author: "Yuval Noah Harari", genre: "History", year: 2011,
+available: true },
+{ title: "Atomic Habits", author: "James Clear", genre: "Self-Help", year: 2018,
+available: false }
+]);
+
+{
+  acknowledged: true,
+  insertedIds: {
+    '0': ObjectId('68c1566341786abe87590c3a'),
+    '1': ObjectId('68c1566341786abe87590c3b'),
+    '2': ObjectId('68c1566341786abe87590c3c'),
+    '3': ObjectId('68c1566341786abe87590c3d'),
+    '4': ObjectId('68c1566341786abe87590c3e')
+  }
+}
+
+db.books.find();
+
+{
+  _id: ObjectId('68c1566341786abe87590c3a'),
+  title: 'The Alchemist',
+  author: 'Paulo Coelho',
+  genre: 'Fiction',
+  year: 1988,
+  available: true
+}
+{
+  _id: ObjectId('68c1566341786abe87590c3b'),
+  title: 'Clean Code',
+  author: 'Robert C. Martin',
+  genre: 'Programming',
+  year: 2008,
+  available: true
+}
+{
+  _id: ObjectId('68c1566341786abe87590c3d'),
+  title: 'Sapiens',
+  author: 'Yuval Noah Harari',
+  genre: 'History',
+  year: 2011,
+  available: true
+}
+{
+  _id: ObjectId('68c1566341786abe87590c3e'),
+  title: 'Atomic Habits',
+  author: 'James Clear',
+  genre: 'Self-Help',
+  year: 2018,
+  available: false
+}
+
+db.books.find({}, { title: 1, author: 1, _id: 0});
+
+{
+  title: 'The Alchemist',
+  author: 'Paulo Coelho'
+}
+{
+  title: 'Clean Code',
+  author: 'Robert C. Martin'
+}
+{
+  title: 'The Pragmatic Programmer',
+  author: 'Andrew Hunt'
+}
+{
+  title: 'Sapiens',
+  author: 'Yuval Noah Harari'
+}
+{
+  title: 'Atomic Habits',
+  author: 'James Clear'
+}
+
+db.books.find({ available: true });
+
+{
+  _id: ObjectId('68c1566341786abe87590c3a'),
+  title: 'The Alchemist',
+  author: 'Paulo Coelho',
+  genre: 'Fiction',
+  year: 1988,
+  available: true
+}
+{
+  _id: ObjectId('68c1566341786abe87590c3b'),
+  title: 'Clean Code',
+  author: 'Robert C. Martin',
+  genre: 'Programming',
+  year: 2008,
+  available: true
+}
+{
+  _id: ObjectId('68c1566341786abe87590c3d'),
+  title: 'Sapiens',
+  author: 'Yuval Noah Harari',
+  genre: 'History',
+  year: 2011,
+  available: true
+}
+
+db.books.find({ genre: "Programming"});
+
+{
+  _id: ObjectId('68c1566341786abe87590c3b'),
+  title: 'Clean Code',
+  author: 'Robert C. Martin',
+  genre: 'Programming',
+  year: 2008,
+  available: true
+}
+{
+  _id: ObjectId('68c1566341786abe87590c3c'),
+  title: 'The Pragmatic Programmer',
+  author: 'Andrew Hunt',
+  genre: 'Programming',
+  year: 1999,
+  available: false
+}
+
+db.books.find({ year: { $gt: 2010 }});
+
+{
+  _id: ObjectId('68c1566341786abe87590c3d'),
+  title: 'Sapiens',
+  author: 'Yuval Noah Harari',
+  genre: 'History',
+  year: 2011,
+  available: true
+}
+{
+  _id: ObjectId('68c1566341786abe87590c3e'),
+  title: 'Atomic Habits',
+  author: 'James Clear',
+  genre: 'Self-Help',
+  year: 2018,
+  available: false
+}
+
+db.books.updateOne( { title: "Atomic Habits" }, {$set: {available: true }} );
+
+{
+  acknowledged: true,
+  insertedId: null,
+  matchedCount: 1,
+  modifiedCount: 1,
+  upsertedCount: 0
+}
+
+db.books.updateOne( { title: "The Alchemist" }, {$set: {year: 1993 }} );
+
+{
+  acknowledged: true,
+  insertedId: null,
+  matchedCount: 1,
+  modifiedCount: 1,
+  upsertedCount: 0
+}
+
+db.books.deleteOne({author:"Andrew Hunt"});
+
+{
+  acknowledged: true,
+  deletedCount: 1
+}
+
+db.books.deleteMany({genre:"History"});
+
+{
+  acknowledged: true,
+  deletedCount: 1
+}
+
+db.books.aggregate([ { $group: { _id: "$genre", count: { $sum: 1}}}]);
+
+{
+  _id: 'Programming',
+  count: 1
+}
+{
+  _id: 'Fiction',
+  count: 1
+}
+{
+  _id: 'Self-Help',
+  count: 1
+}
+
+db.books.find().sort({ year: 1}).limit(1);
+
+{
+  _id: ObjectId('68c1566341786abe87590c3a'),
+  title: 'The Alchemist',
+  author: 'Paulo Coelho',
+  genre: 'Fiction',
+  year: 1993,
+  available: true
+}
+
+db.books.aggregate([ { $group: { _id: null, avgYear: { $avg: "$year"}}}]);
+
+{
+  _id: null,
+  avgYear: 2006.3333333333333
+}
