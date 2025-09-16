@@ -1,5 +1,5 @@
-use Entertainment
-switched to db Entertainment
+use movieDB
+switched to db movieDB
 db.users.insertMany([
 { _id: 1, name: "Rahul Sharma", email: "rahul@example.com", city: "Bangalore", plan:
 "Premium" },
@@ -163,7 +163,7 @@ db.movies.find(
       rating: 1
     },
     limit: 10,
-    '$db': 'Entertainment'
+    '$db': 'movieDB'
   },
   serverInfo: {
     host: 'DESKTOP-3228A6K',
@@ -225,7 +225,7 @@ db.movies.find({ title: /Inception/ }).hint({ $natural: 1 }).explain("executionS
     hint: {
       '$natural': 1
     },
-    '$db': 'Entertainment'
+    '$db': 'movieDB'
   },
   serverInfo: {
     host: 'DESKTOP-3228A6K',
