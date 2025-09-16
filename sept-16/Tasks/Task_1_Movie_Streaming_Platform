@@ -1,0 +1,710 @@
+use Entertainment
+switched to db Entertainment
+db.users.insertMany([
+{ _id: 1, name: "Rahul Sharma", email: "rahul@example.com", city: "Bangalore", plan:
+"Premium" },
+{ _id: 2, name: "Priya Singh", email: "priya@example.com", city: "Delhi", plan:
+"Basic" },
+{ _id: 3, name: "Aman Kumar", email: "aman@example.com", city: "Hyderabad", plan:
+"Standard" }
+]);
+{
+  acknowledged: true,
+  insertedIds: {
+    '0': 1,
+    '1': 2,
+    '2': 3
+  }
+}
+db.movies.insertMany([
+{ _id: 101, title: "Inception", genre: "Sci-Fi", year: 2010, rating: 8.8 },
+{ _id: 102, title: "3 Idiots", genre: "Comedy", year: 2009, rating: 8.4 },
+{ _id: 103, title: "Bahubali", genre: "Action", year: 2015, rating: 8.1 },
+{ _id: 104, title: "The Dark Knight", genre: "Action", year: 2008, rating: 9.0 },
+{ _id: 105, title: "Dangal", genre: "Drama", year: 2016, rating: 8.5 }
+]);
+{
+  acknowledged: true,
+  insertedIds: {
+    '0': 101,
+    '1': 102,
+    '2': 103,
+    '3': 104,
+    '4': 105
+  }
+}
+db.subscriptions.insertMany([
+{ user_id: 1, start_date: ISODate("2025-01-01"), end_date: ISODate("2025-12-31"),
+amount: 999 },
+{ user_id: 2, start_date: ISODate("2025-02-01"), end_date: ISODate("2025-07-31"),
+amount: 499 },
+{ user_id: 3, start_date: ISODate("2025-01-15"), end_date: ISODate("2025-10-15"),
+amount: 799 }
+]);
+{
+  acknowledged: true,
+  insertedIds: {
+    '0': ObjectId('68c8e17af3714e764d0cd7a9'),
+    '1': ObjectId('68c8e17af3714e764d0cd7aa'),
+    '2': ObjectId('68c8e17af3714e764d0cd7ab')
+  }
+}
+db.watchHistory.insertMany([
+{ user_id: 1, movie_id: 101, watch_date: ISODate("2025-02-10") },
+{ user_id: 1, movie_id: 102, watch_date: ISODate("2025-02-12") },
+{ user_id: 2, movie_id: 103, watch_date: ISODate("2025-02-11") },
+{ user_id: 3, movie_id: 104, watch_date: ISODate("2025-02-13") },
+{ user_id: 3, movie_id: 105, watch_date: ISODate("2025-02-14") }
+]);
+{
+  acknowledged: true,
+  insertedIds: {
+    '0': ObjectId('68c8e185f3714e764d0cd7ac'),
+    '1': ObjectId('68c8e185f3714e764d0cd7ad'),
+    '2': ObjectId('68c8e185f3714e764d0cd7ae'),
+    '3': ObjectId('68c8e185f3714e764d0cd7af'),
+    '4': ObjectId('68c8e185f3714e764d0cd7b0')
+  }
+}
+db.users.insertOne({
+  _id: 4,
+  name: "Siddharth Rao",
+  email: "siddharth.rao@example.com",
+  city: "Mumbai",
+  plan: "Standard"
+});
+{
+  acknowledged: true,
+  insertedId: 4
+}
+db.movies.updateOne(
+  { title: "Bahubali" },
+  { $set: { rating: 8.3 } }
+);
+{
+  acknowledged: true,
+  insertedId: null,
+  matchedCount: 1,
+  modifiedCount: 1,
+  upsertedCount: 0
+}
+db.movies.deleteOne({ title: "3 Idiots" });
+{
+  acknowledged: true,
+  deletedCount: 1
+}
+db.users.find({ plan: "Premium" }).pretty();
+{
+  _id: 1,
+  name: 'Rahul Sharma',
+  email: 'rahul@example.com',
+  city: 'Bangalore',
+  plan: 'Premium'
+}
+db.users.createIndex({ email: 1 }, { unique: true, name: "unique_email_idx" });
+unique_email_idx
+db.movies.createIndex({ genre: 1, rating: -1 }, { name: "genre_rating_idx" });
+genre_rating_idx
+db.users.getIndexes();
+db.movies.getIndexes();
+[
+  { v: 2, key: { _id: 1 }, name: '_id_' },
+  { v: 2, key: { genre: 1, rating: -1 }, name: 'genre_rating_idx' }
+]
+db.movies.find(
+  { genre: "Action", rating: { $gte: 8 } },
+  { title: 1, year: 1, rating: 1 }
+).sort({ rating: -1 }).limit(10).explain("executionStats");
+              rating: -1
+            },
+            indexName: 'genre_rating_idx',
+            isMultiKey: false,
+            multiKeyPaths: {
+              genre: [],
+              rating: []
+            },
+            isUnique: false,
+            isSparse: false,
+            isPartial: false,
+            indexVersion: 2,
+            direction: 'forward',
+            indexBounds: {
+              genre: [
+                '["Action", "Action"]'
+              ],
+              rating: [
+                '[inf.0, 8]'
+              ]
+            },
+            keysExamined: 2,
+            seeks: 1,
+            dupsTested: 0,
+            dupsDropped: 0
+          }
+        }
+      }
+    }
+  },
+  queryShapeHash: '4F6B1911ECA125171ED96DF2214AF3A1777E02FED3D44C589855FE36D6CCAB61',
+  command: {
+    find: 'movies',
+    filter: {
+      genre: 'Action',
+      rating: {
+        '$gte': 8
+      }
+    },
+    sort: {
+      rating: -1
+    },
+    projection: {
+      title: 1,
+      year: 1,
+      rating: 1
+    },
+    limit: 10,
+    '$db': 'Entertainment'
+  },
+  serverInfo: {
+    host: 'DESKTOP-3228A6K',
+    port: 27017,
+    version: '8.0.13',
+    gitVersion: '8dc5cd2a30c4524132e2d44bb314544dc477e611'
+  },
+  serverParameters: {
+    internalQueryFacetBufferSizeBytes: 104857600,
+    internalQueryFacetMaxOutputDocSizeBytes: 104857600,
+    internalLookupStageIntermediateDocumentMaxSizeBytes: 104857600,
+    internalDocumentSourceGroupMaxMemoryBytes: 104857600,
+    internalQueryMaxBlockingSortMemoryUsageBytes: 104857600,
+    internalQueryProhibitBlockingMergeOnMongoS: 0,
+    internalQueryMaxAddToSetBytes: 104857600,
+    internalDocumentSourceSetWindowFieldsMaxMemoryBytes: 104857600,
+    internalQueryFrameworkControl: 'trySbeRestricted',
+    internalQueryPlannerIgnoreIndexWithCollationForRegex: 1
+  },
+  ok: 1
+}
+db.movies.find({ title: /Inception/ }).hint({ $natural: 1 }).explain("executionStats");
+{
+      direction: 'forward'
+    },
+    rejectedPlans: []
+  },
+  executionStats: {
+    executionSuccess: true,
+    nReturned: 1,
+    executionTimeMillis: 6,
+    totalKeysExamined: 0,
+    totalDocsExamined: 4,
+    executionStages: {
+      isCached: false,
+      stage: 'COLLSCAN',
+      filter: {
+        title: BSONRegExp('Inception', '')
+      },
+      nReturned: 1,
+      executionTimeMillisEstimate: 0,
+      works: 5,
+      advanced: 1,
+      needTime: 3,
+      needYield: 0,
+      saveState: 0,
+      restoreState: 0,
+      isEOF: 1,
+      direction: 'forward',
+      docsExamined: 4
+    }
+  },
+  queryShapeHash: 'F694CD09DB6E1D428075739041EE06E09730A58D965CA9173E8BE4CF88B614AC',
+  command: {
+    find: 'movies',
+    filter: {
+      title: BSONRegExp('Inception', '')
+    },
+    hint: {
+      '$natural': 1
+    },
+    '$db': 'Entertainment'
+  },
+  serverInfo: {
+    host: 'DESKTOP-3228A6K',
+    port: 27017,
+    version: '8.0.13',
+    gitVersion: '8dc5cd2a30c4524132e2d44bb314544dc477e611'
+  },
+  serverParameters: {
+    internalQueryFacetBufferSizeBytes: 104857600,
+    internalQueryFacetMaxOutputDocSizeBytes: 104857600,
+    internalLookupStageIntermediateDocumentMaxSizeBytes: 104857600,
+    internalDocumentSourceGroupMaxMemoryBytes: 104857600,
+    internalQueryMaxBlockingSortMemoryUsageBytes: 104857600,
+    internalQueryProhibitBlockingMergeOnMongoS: 0,
+    internalQueryMaxAddToSetBytes: 104857600,
+    internalDocumentSourceSetWindowFieldsMaxMemoryBytes: 104857600,
+    internalQueryFrameworkControl: 'trySbeRestricted',
+    internalQueryPlannerIgnoreIndexWithCollationForRegex: 1
+  },
+  ok: 1
+}
+db.movies.aggregate([
+  { $group: { _id: "$genre", count: { $sum: 1 } } },
+  { $sort: { count: -1 } }
+]);
+{
+  _id: 'Action',
+  count: 2
+}
+{
+  _id: 'Drama',
+  count: 1
+}
+{
+  _id: 'Sci-Fi',
+  count: 1
+}
+
+db.movies.aggregate([
+  { $sort: { rating: -1 } },
+  { $limit: 2 },
+  { $project: { _id: 0, title: 1, rating: 1, year: 1 } }
+]);
+{
+  title: 'The Dark Knight',
+  year: 2008,
+  rating: 9
+}
+{
+  title: 'Inception',
+  year: 2010,
+  rating: 8.8
+}
+db.subscriptions.aggregate([
+  { $lookup: {
+      from: "users",
+      localField: "user_id",
+      foreignField: "_id",
+      as: "user"
+  }},
+  { $unwind: "$user" },
+  { $group: {
+      _id: "$user.plan",
+      avgAmount: { $avg: "$amount" },
+      count: { $sum: 1 }
+  }},
+  { $project: { plan: "$_id", avgAmount: 1, count: 1, _id: 0 } }
+]);
+{
+  avgAmount: 999,
+  count: 1,
+  plan: 'Premium'
+}
+{
+  avgAmount: 499,
+  count: 1,
+  plan: 'Basic'
+}
+{
+  avgAmount: 799,
+  count: 1,
+  plan: 'Standard'
+}
+db.watchHistory.aggregate([
+  { $group: { _id: "$movie_id", watchCount: { $sum: 1 } } },
+  { $lookup: {
+      from: "movies",
+      localField: "_id",
+      foreignField: "_id",
+      as: "movie"
+  }},
+  { $unwind: { path: "$movie", preserveNullAndEmptyArrays: true } },
+  { $project: { movie_id: "$_id", title: "$movie.title", watchCount: 1, _id: 0 } },
+  { $sort: { watchCount: -1 } }
+]);
+{
+  watchCount: 1,
+  movie_id: 103,
+  title: 'Bahubali'
+}
+{
+  watchCount: 1,
+  movie_id: 105,
+  title: 'Dangal'
+}
+{
+  watchCount: 1,
+  movie_id: 102
+}
+{
+  watchCount: 1,
+  movie_id: 104,
+  title: 'The Dark Knight'
+}
+{
+  watchCount: 1,
+  movie_id: 101,
+  title: 'Inception'
+}
+db.users.aggregate([
+  { $match: { plan: "Premium" } },
+  { $group: { _id: "$city", premiumCount: { $sum: 1 } } },
+  { $sort: { premiumCount: -1 } },
+  { $limit: 1 },
+  { $project: { city: "$_id", premiumCount: 1, _id: 0 } }
+]);
+{
+  premiumCount: 1,
+  city: 'Bangalore'
+}
+db.watchHistory.aggregate([
+  { $lookup: {
+      from: "movies",
+      localField: "movie_id",
+      foreignField: "_id",
+      as: "movie"
+  }},
+  { $unwind: "$movie" },
+  { $group: { _id: "$movie.genre", totalWatches: { $sum: 1 } } },
+  { $sort: { totalWatches: -1 } },
+  { $limit: 1 },
+  { $project: { genre: "$_id", totalWatches: 1, _id: 0 } }
+]);
+{
+  totalWatches: 2,
+  genre: 'Action'
+}
+db.watchHistory.aggregate([
+  { $lookup: {
+      from: "users",
+      localField: "user_id",
+      foreignField: "_id",
+      as: "user"
+  }},
+  { $lookup: {
+      from: "movies",
+      localField: "movie_id",
+      foreignField: "_id",
+      as: "movie"
+  }},
+  { $unwind: "$user" },
+  { $unwind: "$movie" },
+  { $project: {
+      _id: 0,
+      watch_date: 1,
+      user_id: 1,
+      user_name: "$user.name",
+      movie_id: 1,
+      movie_title: "$movie.title"
+  }},
+  { $sort: { watch_date: 1 } }
+]);
+{
+  user_id: 1,
+  movie_id: 101,
+  watch_date: 2025-02-10T00:00:00.000Z,
+  user_name: 'Rahul Sharma',
+  movie_title: 'Inception'
+}
+{
+  user_id: 2,
+  movie_id: 103,
+  watch_date: 2025-02-11T00:00:00.000Z,
+  user_name: 'Priya Singh',
+  movie_title: 'Bahubali'
+}
+{
+  user_id: 3,
+  movie_id: 104,
+  watch_date: 2025-02-13T00:00:00.000Z,
+  user_name: 'Aman Kumar',
+  movie_title: 'The Dark Knight'
+}
+{
+  user_id: 3,
+  movie_id: 105,
+  watch_date: 2025-02-14T00:00:00.000Z,
+  user_name: 'Aman Kumar',
+  movie_title: 'Dangal'
+}
+db.watchHistory.aggregate([
+  { $lookup: {
+      from: "users",
+      localField: "user_id",
+      foreignField: "_id",
+      as: "user"
+  }},
+  { $unwind: "$user" },
+  { $match: { "user.name": "Rahul Sharma" } },
+  { $lookup: {
+      from: "movies",
+      localField: "movie_id",
+      foreignField: "_id",
+      as: "movie"
+  }},
+  { $unwind: "$movie" },
+  { $project: { _id: 0, movie_id: 1, title: "$movie.title", watch_date: 1 } }
+]);
+{
+  movie_id: 101,
+  watch_date: 2025-02-10T00:00:00.000Z,
+  title: 'Inception'
+}
+db.users.aggregate([
+  { $lookup: {
+      from: "subscriptions",
+      localField: "_id",
+      foreignField: "user_id",
+      as: "subscriptions"
+  }},
+  { $project: {
+      _id: 0,
+      user_id: "$_id",
+      name: 1,
+      email: 1,
+      plan: 1,
+      subscriptions: 1
+  }}
+]);
+{
+  name: 'Rahul Sharma',
+  email: 'rahul@example.com',
+  plan: 'Premium',
+  subscriptions: [
+    {
+      _id: ObjectId('68c8e17af3714e764d0cd7a9'),
+      user_id: 1,
+      start_date: 2025-01-01T00:00:00.000Z,
+      end_date: 2025-12-31T00:00:00.000Z,
+      amount: 999
+    }
+  ],
+  user_id: 1
+}
+{
+  name: 'Priya Singh',
+  email: 'priya@example.com',
+  plan: 'Basic',
+  subscriptions: [
+    {
+      _id: ObjectId('68c8e17af3714e764d0cd7aa'),
+      user_id: 2,
+      start_date: 2025-02-01T00:00:00.000Z,
+      end_date: 2025-07-31T00:00:00.000Z,
+      amount: 499
+    }
+  ],
+  user_id: 2
+}
+{
+  name: 'Aman Kumar',
+  email: 'aman@example.com',
+  plan: 'Standard',
+  subscriptions: [
+    {
+      _id: ObjectId('68c8e17af3714e764d0cd7ab'),
+      user_id: 3,
+      start_date: 2025-01-15T00:00:00.000Z,
+      end_date: 2025-10-15T00:00:00.000Z,
+      amount: 799
+    }
+  ],
+  user_id: 3
+}
+{
+  name: 'Siddharth Rao',
+  email: 'siddharth.rao@example.com',
+  plan: 'Standard',
+  subscriptions: [],
+  user_id: 4
+}
+db.watchHistory.aggregate([
+  { $lookup: {
+      from: "movies",
+      localField: "movie_id",
+      foreignField: "_id",
+      as: "movie"
+  }},
+  { $unwind: "$movie" },
+  { $match: { "movie.year": { $gt: 2010 } } },
+  { $lookup: {
+      from: "users",
+      localField: "user_id",
+      foreignField: "_id",
+      as: "user"
+  }},
+  { $unwind: "$user" },
+  { $group: { _id: "$user._id", name: { $first: "$user.name" }, city: { $first: "$user.city" } } },
+  { $project: { user_id: "$_id", name: 1, city: 1, _id: 0 } }
+]);
+{
+  name: 'Priya Singh',
+  city: 'Delhi',
+  user_id: 2
+}
+{
+  name: 'Aman Kumar',
+  city: 'Hyderabad',
+  user_id: 3
+}
+db.watchHistory.aggregate([
+  { $lookup: {
+      from: "users",
+      localField: "user_id",
+      foreignField: "_id",
+      as: "user"
+  }},
+  { $unwind: "$user" },
+  { $group: {
+      _id: "$movie_id",
+      users: { $addToSet: { user_id: "$user._id", name: "$user.name", email: "$user.email" } },
+      watchCount: { $sum: 1 }
+  }},
+  { $lookup: {
+      from: "movies",
+      localField: "_id",
+      foreignField: "_id",
+      as: "movie"
+  }},
+  { $unwind: { path: "$movie", preserveNullAndEmptyArrays: true } },
+  { $project: {
+      movie_id: "$_id",
+      title: "$movie.title",
+      watchCount: 1,
+      users: 1,
+      _id: 0
+  }}
+]);
+{
+  users: [
+    {
+      user_id: 3,
+      name: 'Aman Kumar',
+      email: 'aman@example.com'
+    }
+  ],
+  watchCount: 1,
+  movie_id: 104,
+  title: 'The Dark Knight'
+}
+{
+  users: [
+    {
+      user_id: 1,
+      name: 'Rahul Sharma',
+      email: 'rahul@example.com'
+    }
+  ],
+  watchCount: 1,
+  movie_id: 102
+}
+{
+  users: [
+    {
+      user_id: 1,
+      name: 'Rahul Sharma',
+      email: 'rahul@example.com'
+    }
+  ],
+  watchCount: 1,
+  movie_id: 101,
+  title: 'Inception'
+}
+{
+  users: [
+    {
+      user_id: 2,
+      name: 'Priya Singh',
+      email: 'priya@example.com'
+    }
+  ],
+  watchCount: 1,
+  movie_id: 103,
+  title: 'Bahubali'
+}
+{
+  users: [
+    {
+      user_id: 3,
+      name: 'Aman Kumar',
+      email: 'aman@example.com'
+    }
+  ],
+  watchCount: 1,
+  movie_id: 105,
+  title: 'Dangal'
+}
+db.watchHistory.aggregate([
+  { $group: { _id: "$user_id", watchCount: { $sum: 1 } } },
+  { $match: { watchCount: { $gt: 2 } } },
+  { $lookup: {
+      from: "users",
+      localField: "_id",
+      foreignField: "_id",
+      as: "user"
+  }},
+  { $unwind: "$user" },
+  { $project: { user_id: "$_id", name: "$user.name", watchCount: 1, _id: 0 } }
+]);
+db.subscriptions.aggregate([
+  { $group: { _id: null, totalRevenue: { $sum: "$amount" }, count: { $sum: 1 } } },
+  { $project: { _id: 0, totalRevenue: 1, count: 1 } }
+]);
+{
+  totalRevenue: 2297,
+  count: 3
+}
+const now = new Date();
+const in30 = new Date(now.getTime() + 30*24*60*60*1000);
+
+db.subscriptions.aggregate([
+  { $match: { end_date: { $gt: now, $lte: in30 } } },
+  { $lookup: {
+      from: "users",
+      localField: "user_id",
+      foreignField: "_id",
+      as: "user"
+  }},
+  { $unwind: "$user" },
+  { $project: {
+      _id: 0,
+      user_id: "$user._id",
+      name: "$user.name",
+      email: "$user.email",
+      end_date: 1,
+      amount: 1
+  }}
+]);
+{
+  end_date: 2025-10-15T00:00:00.000Z,
+  amount: 799,
+  user_id: 3,
+  name: 'Aman Kumar',
+  email: 'aman@example.com'
+}
+db.watchHistory.aggregate([
+  { $group: { _id: "$movie_id", watchCount: { $sum: 1 } } },
+  { $sort: { watchCount: -1 } },
+  { $limit: 1 },
+  { $lookup: {
+      from: "movies",
+      localField: "_id",
+      foreignField: "_id",
+      as: "movie"
+  }},
+  { $unwind: "$movie" },
+  { $project: { movie_id: "$_id", title: "$movie.title", watchCount: 1, _id: 0 } }
+]);
+db.watchHistory.aggregate([
+  { $lookup: { from: "movies", localField: "movie_id", foreignField: "_id", as: "movie" } },
+  { $unwind: "$movie" },
+  { $group: { _id: "$movie.genre", watchCount: { $sum: 1 } } },
+  { $sort: { watchCount: 1 } },
+  { $limit: 1 },
+  { $project: { genre: "$_id", watchCount: 1, _id: 0 } }
+]);
+{
+  watchCount: 1,
+  genre: 'Drama'
+}
+
+
