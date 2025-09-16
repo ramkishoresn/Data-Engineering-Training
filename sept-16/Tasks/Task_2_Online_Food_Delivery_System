@@ -1,0 +1,607 @@
+use foodDeliveryDB
+switched to db foodDeliveryDB
+db.customers.insertMany([
+{ _id: 1, name: "Rahul Sharma", email: "rahul@example.com", city: "Bangalore" },
+{ _id: 2, name: "Priya Singh", email: "priya@example.com", city: "Delhi" },
+{ _id: 3, name: "Aman Kumar", email: "aman@example.com", city: "Hyderabad" }
+]);
+{
+  acknowledged: true,
+  insertedIds: {
+    '0': 1,
+    '1': 2,
+    '2': 3
+  }
+}
+db.restaurants.insertMany([
+{ _id: 101, name: "Spicy Treats", city: "Bangalore", rating: 4.5 },
+{ _id: 102, name: "Delhi Biryani House", city: "Delhi", rating: 4.2 },
+{ _id: 103, name: "Hyderabad Grill", city: "Hyderabad", rating: 4.7 }
+]);
+{
+  acknowledged: true,
+  insertedIds: {
+    '0': 101,
+    '1': 102,
+    '2': 103
+  }
+}
+db.menu.insertMany([
+{ _id: 201, restaurant_id: 101, name: "Paneer Tikka", price: 250 },
+{ _id: 202, restaurant_id: 101, name: "Veg Biryani", price: 180 },
+{ _id: 203, restaurant_id: 102, name: "Chicken Biryani", price: 300 },
+{ _id: 204, restaurant_id: 103, name: "Mutton Biryani", price: 400 },
+{ _id: 205, restaurant_id: 103, name: "Butter Naan", price: 50 }
+]);
+{
+  acknowledged: true,
+  insertedIds: {
+    '0': 201,
+    '1': 202,
+    '2': 203,
+    '3': 204,
+    '4': 205
+  }
+}
+db.orders.insertMany([
+{
+_id: 301,
+customer_id: 1,
+items: [ { menu_id: 201, qty: 2 }, { menu_id: 202, qty: 1 } ],
+order_date: ISODate("2025-01-05"),
+status: "Delivered"
+},
+{
+_id: 302,
+customer_id: 2,
+items: [ { menu_id: 203, qty: 1 } ],
+order_date: ISODate("2025-01-06"),
+status: "Delivered"
+
+},
+{
+_id: 303,
+customer_id: 3,
+items: [ { menu_id: 204, qty: 1 }, { menu_id: 205, qty: 3 } ],
+order_date: ISODate("2025-01-07"),
+status: "Pending"
+}
+]);
+{
+  acknowledged: true,
+  insertedIds: {
+    '0': 301,
+    '1': 302,
+    '2': 303
+  }
+}
+db.customers.insertOne({
+  _id: 4,
+  name: "Siddharth Rao",
+  email: "siddharth@example.com",
+  city: "Mumbai"
+});
+{
+  acknowledged: true,
+  insertedId: 4
+}
+db.restaurants.find({ city: "Hyderabad" }).pretty();
+{
+  _id: 103,
+  name: 'Hyderabad Grill',
+  city: 'Hyderabad',
+  rating: 4.7
+}
+db.restaurants.updateOne(
+  { name: "Spicy Treats" },
+  { $set: { rating: 4.8 } }
+);
+{
+  acknowledged: true,
+  insertedId: null,
+  matchedCount: 1,
+  modifiedCount: 1,
+  upsertedCount: 0
+}
+db.menu.deleteOne({ name: "Butter Naan" });
+{
+  acknowledged: true,
+  deletedCount: 1
+}
+db.customers.createIndex({ email: 1 }, { unique: true, name: "unique_email_idx" });
+unique_email_idx
+db.restaurants.createIndex({ city: 1, rating: -1 }, { name: "city_rating_idx" });
+city_rating_idx
+db.customers.getIndexes();
+db.restaurants.getIndexes();
+[
+  { v: 2, key: { _id: 1 }, name: '_id_' },
+  { v: 2, key: { city: 1, rating: -1 }, name: 'city_rating_idx' }
+]
+db.restaurants.find({ city: "Hyderabad" }).sort({ rating: -1 }).limit(3).explain("executionStats");
+{
+            city: 1,
+            rating: -1
+          },
+          indexName: 'city_rating_idx',
+          isMultiKey: false,
+          multiKeyPaths: {
+            city: [],
+            rating: []
+          },
+          isUnique: false,
+          isSparse: false,
+          isPartial: false,
+          indexVersion: 2,
+          direction: 'forward',
+          indexBounds: {
+            city: [
+              '["Hyderabad", "Hyderabad"]'
+            ],
+            rating: [
+              '[MaxKey, MinKey]'
+            ]
+          },
+          keysExamined: 1,
+          seeks: 1,
+          dupsTested: 0,
+          dupsDropped: 0
+        }
+      }
+    }
+  },
+  queryShapeHash: '7231FC96F69862F284A269CEABB1502B3BB5821BFCB19896C6A21B09929AAAA7',
+  command: {
+    find: 'restaurants',
+    filter: {
+      city: 'Hyderabad'
+    },
+    sort: {
+      rating: -1
+    },
+    limit: 3,
+    '$db': 'foodDeliveryDB'
+  },
+  serverInfo: {
+    host: 'DESKTOP-3228A6K',
+    port: 27017,
+    version: '8.0.13',
+    gitVersion: '8dc5cd2a30c4524132e2d44bb314544dc477e611'
+  },
+  serverParameters: {
+    internalQueryFacetBufferSizeBytes: 104857600,
+    internalQueryFacetMaxOutputDocSizeBytes: 104857600,
+    internalLookupStageIntermediateDocumentMaxSizeBytes: 104857600,
+    internalDocumentSourceGroupMaxMemoryBytes: 104857600,
+    internalQueryMaxBlockingSortMemoryUsageBytes: 104857600,
+    internalQueryProhibitBlockingMergeOnMongoS: 0,
+    internalQueryMaxAddToSetBytes: 104857600,
+    internalDocumentSourceSetWindowFieldsMaxMemoryBytes: 104857600,
+    internalQueryFrameworkControl: 'trySbeRestricted',
+    internalQueryPlannerIgnoreIndexWithCollationForRegex: 1
+  },
+  ok: 1
+}
+db.restaurants.find({ rating: { $gte: 4.5 } }).explain("executionStats");
+{
+    rejectedPlans: []
+  },
+  executionStats: {
+    executionSuccess: true,
+    nReturned: 2,
+    executionTimeMillis: 2,
+    totalKeysExamined: 0,
+    totalDocsExamined: 3,
+    executionStages: {
+      isCached: false,
+      stage: 'COLLSCAN',
+      filter: {
+        rating: {
+          '$gte': 4.5
+        }
+      },
+      nReturned: 2,
+      executionTimeMillisEstimate: 0,
+      works: 4,
+      advanced: 2,
+      needTime: 1,
+      needYield: 0,
+      saveState: 0,
+      restoreState: 0,
+      isEOF: 1,
+      direction: 'forward',
+      docsExamined: 3
+    }
+  },
+  queryShapeHash: 'DB44403CFDAD1E808552F39C47BE98B00A53317553A9D6504798C2E8E169C8BE',
+  command: {
+    find: 'restaurants',
+    filter: {
+      rating: {
+        '$gte': 4.5
+      }
+    },
+    '$db': 'foodDeliveryDB'
+  },
+  serverInfo: {
+    host: 'DESKTOP-3228A6K',
+    port: 27017,
+    version: '8.0.13',
+    gitVersion: '8dc5cd2a30c4524132e2d44bb314544dc477e611'
+  },
+  serverParameters: {
+    internalQueryFacetBufferSizeBytes: 104857600,
+    internalQueryFacetMaxOutputDocSizeBytes: 104857600,
+    internalLookupStageIntermediateDocumentMaxSizeBytes: 104857600,
+    internalDocumentSourceGroupMaxMemoryBytes: 104857600,
+    internalQueryMaxBlockingSortMemoryUsageBytes: 104857600,
+    internalQueryProhibitBlockingMergeOnMongoS: 0,
+    internalQueryMaxAddToSetBytes: 104857600,
+    internalDocumentSourceSetWindowFieldsMaxMemoryBytes: 104857600,
+    internalQueryFrameworkControl: 'trySbeRestricted',
+    internalQueryPlannerIgnoreIndexWithCollationForRegex: 1
+  },
+  ok: 1
+}
+db.orders.aggregate([
+  { $group: { _id: "$customer_id", totalOrders: { $sum: 1 } } },
+  { $lookup: { from: "customers", localField: "_id", foreignField: "_id", as: "customer" } },
+  { $unwind: "$customer" },
+  { $project: { customer: "$customer.name", totalOrders: 1, _id: 0 } }
+]);
+{
+  totalOrders: 1,
+  customer: 'Rahul Sharma'
+}
+{
+  totalOrders: 1,
+  customer: 'Aman Kumar'
+}
+{
+  totalOrders: 1,
+  customer: 'Priya Singh'
+}
+db.orders.aggregate([
+  { $unwind: "$items" },
+  { $lookup: { from: "menu", localField: "items.menu_id", foreignField: "_id", as: "menuItem" } },
+  { $unwind: "$menuItem" },
+  { $group: {
+      _id: "$menuItem.restaurant_id",
+      revenue: { $sum: { $multiply: ["$items.qty", "$menuItem.price"] } }
+  }},
+  { $lookup: { from: "restaurants", localField: "_id", foreignField: "_id", as: "restaurant" } },
+  { $unwind: "$restaurant" },
+  { $project: { restaurant: "$restaurant.name", revenue: 1, _id: 0 } }
+]);
+{
+  revenue: 680,
+  restaurant: 'Spicy Treats'
+}
+{
+  revenue: 300,
+  restaurant: 'Delhi Biryani House'
+}
+{
+  revenue: 400,
+  restaurant: 'Hyderabad Grill'
+}
+db.menu.find({}, { name: 1, price: 1 })
+       .sort({ price: -1 })
+       .limit(2);
+{
+  _id: 204,
+  name: 'Mutton Biryani',
+  price: 400
+}
+{
+  _id: 203,
+  name: 'Chicken Biryani',
+  price: 300
+}
+db.menu.aggregate([
+  { $group: { _id: "$restaurant_id", avgPrice: { $avg: "$price" } } },
+  { $lookup: { from: "restaurants", localField: "_id", foreignField: "_id", as: "restaurant" } },
+  { $unwind: "$restaurant" },
+  { $project: { restaurant: "$restaurant.name", avgPrice: 1, _id: 0 } }
+]);
+{
+  avgPrice: 300,
+  restaurant: 'Delhi Biryani House'
+}
+{
+  avgPrice: 400,
+  restaurant: 'Hyderabad Grill'
+}
+{
+  avgPrice: 215,
+  restaurant: 'Spicy Treats'
+}
+db.orders.aggregate([
+  { $match: { status: "Pending" } },
+  { $lookup: { from: "customers", localField: "customer_id", foreignField: "_id", as: "cust" } },
+  { $unwind: "$cust" },
+  { $group: { _id: "$cust.city", pendingOrders: { $sum: 1 } } }
+]);
+{
+  _id: 'Hyderabad',
+  pendingOrders: 1
+}
+db.restaurants.aggregate([
+  { $sort: { city: 1, rating: -1 } },
+  { $group: { _id: "$city", topRestaurant: { $first: "$name" }, topRating: { $first: "$rating" } } }
+]);
+{
+  _id: 'Bangalore',
+  topRestaurant: 'Spicy Treats',
+  topRating: 4.8
+}
+{
+  _id: 'Delhi',
+  topRestaurant: 'Delhi Biryani House',
+  topRating: 4.2
+}
+{
+  _id: 'Hyderabad',
+  topRestaurant: 'Hyderabad Grill',
+  topRating: 4.7
+}
+db.orders.aggregate([
+  { $lookup: { from: "customers", localField: "customer_id", foreignField: "_id", as: "customer" } },
+  { $unwind: "$customer" },
+  { $project: { order_id: "$_id", customer: "$customer.name", city: "$customer.city", status: 1, order_date: 1, _id: 0 } }
+]);
+{
+  order_date: 2025-01-05T00:00:00.000Z,
+  status: 'Delivered',
+  order_id: 301,
+  customer: 'Rahul Sharma',
+  city: 'Bangalore'
+}
+{
+  order_date: 2025-01-06T00:00:00.000Z,
+  status: 'Delivered',
+  order_id: 302,
+  customer: 'Priya Singh',
+  city: 'Delhi'
+}
+{
+  order_date: 2025-01-07T00:00:00.000Z,
+  status: 'Pending',
+  order_id: 303,
+  customer: 'Aman Kumar',
+  city: 'Hyderabad'
+}
+db.orders.aggregate([
+  { $unwind: "$items" },
+  { $lookup: { from: "menu", localField: "items.menu_id", foreignField: "_id", as: "menuItem" } },
+  { $unwind: "$menuItem" },
+  { $lookup: { from: "restaurants", localField: "menuItem.restaurant_id", foreignField: "_id", as: "restaurant" } },
+  { $unwind: "$restaurant" },
+  { $group: {
+      _id: "$_id",
+      customer_id: { $first: "$customer_id" },
+      order_date: { $first: "$order_date" },
+      status: { $first: "$status" },
+      items: { $push: { dish: "$menuItem.name", qty: "$items.qty", price: "$menuItem.price", restaurant: "$restaurant.name" } }
+  }}
+]);
+{
+  _id: 301,
+  customer_id: 1,
+  order_date: 2025-01-05T00:00:00.000Z,
+  status: 'Delivered',
+  items: [
+    {
+      dish: 'Paneer Tikka',
+      qty: 2,
+      price: 250,
+      restaurant: 'Spicy Treats'
+    },
+    {
+      dish: 'Veg Biryani',
+      qty: 1,
+      price: 180,
+      restaurant: 'Spicy Treats'
+    }
+  ]
+}
+{
+  _id: 303,
+  customer_id: 3,
+  order_date: 2025-01-07T00:00:00.000Z,
+  status: 'Pending',
+  items: [
+    {
+      dish: 'Mutton Biryani',
+      qty: 1,
+      price: 400,
+      restaurant: 'Hyderabad Grill'
+    }
+  ]
+}
+{
+  _id: 302,
+  customer_id: 2,
+  order_date: 2025-01-06T00:00:00.000Z,
+  status: 'Delivered',
+  items: [
+    {
+      dish: 'Chicken Biryani',
+      qty: 1,
+      price: 300,
+      restaurant: 'Delhi Biryani House'
+    }
+  ]
+}
+db.orders.aggregate([
+  { $unwind: "$items" },
+  { $lookup: { from: "menu", localField: "items.menu_id", foreignField: "_id", as: "menuItem" } },
+  { $unwind: "$menuItem" },
+  { $group: {
+      _id: "$customer_id",
+      dishes: { $push: { dish: "$menuItem.name", qty: "$items.qty" } }
+  }},
+  { $lookup: { from: "customers", localField: "_id", foreignField: "_id", as: "cust" } },
+  { $unwind: "$cust" },
+  { $project: { customer: "$cust.name", dishes: 1, _id: 0 } }
+]);
+{
+  dishes: [
+    {
+      dish: 'Chicken Biryani',
+      qty: 1
+    }
+  ],
+  customer: 'Priya Singh'
+}
+{
+  dishes: [
+    {
+      dish: 'Mutton Biryani',
+      qty: 1
+    }
+  ],
+  customer: 'Aman Kumar'
+}
+{
+  dishes: [
+    {
+      dish: 'Paneer Tikka',
+      qty: 2
+    },
+    {
+      dish: 'Veg Biryani',
+      qty: 1
+    }
+  ],
+  customer: 'Rahul Sharma'
+}
+db.orders.aggregate([
+  { $unwind: "$items" },
+  { $lookup: { from: "menu", localField: "items.menu_id", foreignField: "_id", as: "menuItem" } },
+  { $unwind: "$menuItem" },
+  { $lookup: { from: "restaurants", localField: "menuItem.restaurant_id", foreignField: "_id", as: "rest" } },
+  { $unwind: "$rest" },
+  { $match: { "rest.name": "Hyderabad Grill" } },
+  { $lookup: { from: "customers", localField: "customer_id", foreignField: "_id", as: "cust" } },
+  { $unwind: "$cust" },
+  { $project: { customer: "$cust.name", city: "$cust.city", _id: 0 } }
+]);
+{
+  customer: 'Aman Kumar',
+  city: 'Hyderabad'
+}
+db.orders.aggregate([
+  { $match: { _id: 301 } },
+  { $unwind: "$items" },
+  { $lookup: { from: "menu", localField: "items.menu_id", foreignField: "_id", as: "menuItem" } },
+  { $unwind: "$menuItem" },
+  { $project: {
+      dish: "$menuItem.name",
+      qty: "$items.qty",
+      price: "$menuItem.price",
+      lineTotal: { $multiply: ["$items.qty", "$menuItem.price"] }
+  }},
+  { $group: {
+      _id: null,
+      details: { $push: { dish: "$dish", qty: "$qty", price: "$price", lineTotal: "$lineTotal" } },
+      grandTotal: { $sum: "$lineTotal" }
+  }},
+  { $project: { _id: 0, details: 1, grandTotal: 1 } }
+]);
+{
+  details: [
+    {
+      dish: 'Paneer Tikka',
+      qty: 2,
+      price: 250,
+      lineTotal: 500
+    },
+    {
+      dish: 'Veg Biryani',
+      qty: 1,
+      price: 180,
+      lineTotal: 180
+    }
+  ],
+  grandTotal: 680
+}
+db.orders.aggregate([
+  { $unwind: "$items" },
+  { $lookup: { from: "menu", localField: "items.menu_id", foreignField: "_id", as: "menuItem" } },
+  { $unwind: "$menuItem" },
+  { $group: { _id: "$customer_id", spent: { $sum: { $multiply: ["$items.qty", "$menuItem.price"] } } } },
+  { $match: { spent: { $gt: 500 } } },
+  { $lookup: { from: "customers", localField: "_id", foreignField: "_id", as: "cust" } },
+  { $unwind: "$cust" },
+  { $project: { customer: "$cust.name", spent: 1, _id: 0 } }
+]);
+{
+  spent: 680,
+  customer: 'Rahul Sharma'
+}
+db.orders.aggregate([
+  { $unwind: "$items" },
+  { $lookup: { from: "menu", localField: "items.menu_id", foreignField: "_id", as: "menuItem" } },
+  { $unwind: "$menuItem" },
+  { $group: { _id: "$customer_id", spent: { $sum: { $multiply: ["$items.qty", "$menuItem.price"] } } } },
+  { $lookup: { from: "customers", localField: "_id", foreignField: "_id", as: "cust" } },
+  { $unwind: "$cust" },
+  { $match: { "cust.city": "Bangalore" } },
+  { $sort: { spent: -1 } },
+  { $limit: 1 },
+  { $project: { customer: "$cust.name", city: "$cust.city", spent: 1, _id: 0 } }
+]);
+{
+  spent: 680,
+  customer: 'Rahul Sharma',
+  city: 'Bangalore'
+}
+db.orders.aggregate([
+  { $unwind: "$items" },
+  { $lookup: { from: "menu", localField: "items.menu_id", foreignField: "_id", as: "menuItem" } },
+  { $unwind: "$menuItem" },
+  { $group: {
+      _id: "$menuItem.restaurant_id",
+      revenue: { $sum: { $multiply: ["$items.qty", "$menuItem.price"] } }
+  }},
+  { $match: { revenue: { $gt: 500 } } },
+  { $lookup: { from: "restaurants", localField: "_id", foreignField: "_id", as: "rest" } },
+  { $unwind: "$rest" },
+  { $project: { restaurant: "$rest.name", revenue: 1, _id: 0 } }
+]);
+{
+  revenue: 680,
+  restaurant: 'Spicy Treats'
+}
+db.orders.aggregate([
+  { $unwind: "$items" },
+  { $lookup: { from: "menu", localField: "items.menu_id", foreignField: "_id", as: "menuItem" } },
+  { $unwind: "$menuItem" },
+  { $group: {
+      _id: "$order_date",
+      dailyRevenue: { $sum: { $multiply: ["$items.qty", "$menuItem.price"] } }
+  }},
+  { $sort: { _id: 1 } }
+]);
+{
+  _id: 2025-01-05T00:00:00.000Z,
+  dailyRevenue: 680
+}
+{
+  _id: 2025-01-06T00:00:00.000Z,
+  dailyRevenue: 300
+}
+{
+  _id: 2025-01-07T00:00:00.000Z,
+  dailyRevenue: 400
+}
+db.orders.aggregate([
+  { $unwind: "$items" },
+  { $group: { _id: "$items.menu_id", totalQty: { $sum: "$items.qty" } } },
+  { $sort: { totalQty: -1 } },
+  { $limit: 1 },
+  { $lookup: { from: "menu", localField: "_id", foreignField: "_id", as: "dish" } },
+  { $unwind: "$dish" },
+  { $project: { dish: "$dish.name", totalQty: 1, _id: 0 } }
+]);
