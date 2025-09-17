@@ -1,0 +1,22 @@
+class Calculator:
+    def add(self,a,b):
+        return a + b
+
+    def sub(self, a, b):
+        return a - b
+
+    def mul(self, a, b):
+        return a * b
+
+    def div(self, a, b):
+        if b != 0:
+            return a / b
+        else:
+            return "0 cannot be divided"
+
+calc=Calculator()
+
+print("Addition:", calc.add(10,5))
+print("Subtraction:", calc.sub(10,5))
+print("Multiplication:", calc.mul(10,5))
+print("Division:", calc.div(10,5))
