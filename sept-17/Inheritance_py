@@ -1,0 +1,21 @@
+class Vehicle:
+    def __init__(self,brand,model):
+        self.brand=brand
+        self.model=model
+
+    def display_info(self):
+        return f"Vehicle: {self.brand} {self.model}"
+
+class Car(Vehicle):
+    def __init__(self,brand,model,doors):
+        super().__init__(brand,model)
+        self.doors=doors
+
+    def display_info(self):
+        return f"Car: {self.brand} {self.model}, Doors: {self.doors}"
+
+v1=Vehicle("Tata","Truck")
+c1=Car("Hyundai","i20",4)
+
+print(v1.display_info())
+print(c1.display_info())
