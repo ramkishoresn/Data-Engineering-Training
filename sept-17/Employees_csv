@@ -1,0 +1,22 @@
+id,name,department,salary
+1,Rahul Sharma,IT,55000
+2,Priya Singh,HR,60000
+3,Aman Kumar,Finance,48000
+4,Sneha Reddy,Marketing,52000
+5,Arjun Mehta,IT,75000
+
+import csv
+
+with open("employees.csv", "r") as file:
+    reader = csv.DictReader(file)
+    employees = list(reader)
+
+print("Employees:")
+for e in employees:
+    print(f"{e['id']} - {e['name']} - ({e['department']}) - ${e['salary']}")
+
+salaries = [int(e["salary"]) for e in employees]
+total_salary = sum(salaries)
+average_salary = total_salary / len(salaries)
+print(f"\nTotal Salary: ${total_salary}")
+print(f"Average Salary: ${average_salary:.2f}")
