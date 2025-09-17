@@ -1,0 +1,51 @@
+[
+  {
+    "id": 101,
+    "name": "Laptop",
+    "category": "Electronics",
+    "price": 55000,
+    "stock": 10
+  },
+  {
+    "id": 102,
+    "name": "Mobile Phone",
+    "category": "Electronics",
+    "price": 25000,
+    "stock": 25
+  },
+  {
+    "id": 103,
+    "name": "Chair",
+    "category": "Furniture",
+    "price": 5000,
+    "stock": 50
+  },
+  {
+    "id": 104,
+    "name": "Book",
+    "category": "Stationery",
+    "price": 300,
+    "stock": 100
+  }
+
+]
+
+import json
+
+with open("products.json","r") as file:
+    products = json.load(file)
+
+print("Available Products:")
+for p in products:
+    print(f"- {p['name']} ({p['category']})")
+
+print("\nInventory Value:")
+for p in products:
+    total_value = p["price"] * p["stock"]
+    print(f"{p['name']} -> ${total_value}")
+
+out_of_stock = [p["name"] for p in products if p["stock"] == 0]
+if out_of_stock:
+    print("\nOut of Stock:", ",".join(out_of_stock))
+else:
+    print("\nAll products are in stock.")
