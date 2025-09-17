@@ -1,0 +1,32 @@
+[
+  {
+    "name": "Rahul Sharma",
+    "age": 21,
+    "marks": { "Math": 90, "Physics": 85, "Computer Science": 95 }
+  },
+  {
+    "name": "Priya Singh",
+    "age": 22,
+    "marks": { "Math": 88, "Physics": 92, "Computer Science": 89 }
+  },
+  {
+    "name": "Aman Kumar",
+    "age": 20,
+    "marks": { "Math": 75, "Physics": 80, "Computer Science": 70 }
+  }
+]
+
+import json
+
+with open('students.json','r') as file:
+    students = json.load(file)
+
+print("All Students:")
+for s in students:
+    print("-",s["name"])
+
+print("\nMarks Summary:")
+for s in students:
+    total=sum(s["marks"].values())
+    avg=total / len(s["marks"])
+    print(f"{s['name']} -> Total: {total},Average:{avg:.2f}")
