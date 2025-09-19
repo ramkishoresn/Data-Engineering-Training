@@ -1,0 +1,111 @@
+CREATE DATABASE online_course_tracker;
+USE online_course_tracker;
+
+CREATE TABLE students (
+    student_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    city VARCHAR(50)
+);
+
+CREATE TABLE courses (
+    course_id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(100) NOT NULL,
+    description TEXT,
+    duration_weeks INT
+);
+
+CREATE TABLE enrollments (
+    enrollment_id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT,
+    course_id INT,
+    enrollment_date DATE DEFAULT CURRENT_DATE,
+    status ENUM('Enrolled','Dropped','Completed') DEFAULT 'Enrolled',
+    FOREIGN KEY (student_id) REFERENCES students(student_id),
+    FOREIGN KEY (course_id) REFERENCES courses(course_id)
+);
+
+CREATE TABLE progress (
+    progress_id INT AUTO_INCREMENT PRIMARY KEY,
+    enrollment_id INT,
+    completed_modules INT DEFAULT 0,
+    total_modules INT,
+    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (enrollment_id) REFERENCES enrollments(enrollment_id)
+);
+
+INSERT INTO students (name, email, city)
+VALUES ('Rahul Sharma', 'rahul@example.com', 'Bangalore');
+
+INSERT INTO courses (title, description, duration_weeks)
+VALUES ('Python Basics', 'Learn Python from scratch', 6);
+
+INSERT INTO enrollments (student_id, course_id, status)
+VALUES (1, 1, 'Enrolled');
+
+INSERT INTO progress (enrollment_id, completed_modules, total_modules)
+VALUES (1, 2, 10);
+
+UPDATE progress
+SET completed_modules = 5
+WHERE progress_id = 1;
+
+UPDATE enrollments
+SET status = 'Dropped'
+WHERE enrollment_id = 1;
+
+DELETE FROM enrollments
+WHERE enrollment_id = 1;
+
+
+DELIMITER $$
+
+CREATE PROCEDURE get_completion_percentage(IN studentId INT, IN courseId INT)
+BEGIN
+    DECLARE comp INT;
+    DECLARE total INT;
+    DECLARE pct DECIMAL(5,2);
+
+    SELECT p.completed_modules, p.total_modules
+    INTO comp, total
+    FROM progress p
+    JOIN enrollments e ON p.enrollment_id = e.enrollment_id
+    WHERE e.student_id = studentId AND e.course_id = courseId;
+
+    SET pct = (comp / total) * 100;
+    SELECT CONCAT('Completion: ', pct, '%') AS completion_percentage;
+END $$
+
+DELIMITER ;
+
+
+use onlineCourseDB
+
+db.feedback.insertMany([
+  {
+    student_id: 1,
+    course_id: 1,
+    rating: 5,
+    comment: "Excellent course, very easy to follow!",
+    date: new Date()
+  },
+  {
+    student_id: 2,
+    course_id: 1,
+    rating: 4,
+    comment: "Good content but needs more examples.",
+    date: new Date()
+  },
+  {
+    student_id: 1,
+    course_id: 2,
+    rating: 3,
+    comment: "Average experience, could be improved.",
+    date: new Date()
+  }
+])
+db.feedback.createIndex({ student_id: 1 });
+
+db.feedback.createIndex({ course_id: 1 });
+
+db.feedback.createIndex({ student_id: 1, course_id: 1 });
