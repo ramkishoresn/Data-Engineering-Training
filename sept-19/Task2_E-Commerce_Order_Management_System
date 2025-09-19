@@ -1,0 +1,218 @@
+import csv
+import json
+import os
+from typing import List, Dict, Optional
+
+class Product:
+    def __init__(self, id: int, name: str, category: str, price: float, stock: int):
+        self.id = id
+        self.name = name
+        self.category = category
+        self.price = price
+        self.stock = stock
+
+    def update_stock(self, qty: int) -> bool:
+        if self.stock >= qty:
+            self.stock -= qty
+            return True
+        return False
+
+class Customer:
+    def __init__(self, name: str):
+        self.name = name
+        self.orders: List['Order'] = []
+
+    def add_order(self, order: 'Order'):
+        self.orders.append(order)
+
+    def total_spent(self) -> float:
+        return sum(order.get_total() for order in self.orders)
+
+class Order:
+    def __init__(self, order_id: int, customer: Customer, items: List[Dict], product_lookup: Dict[int, Product]):
+        self.order_id = order_id
+        self.customer = customer
+        self.items = items
+        self.product_lookup = product_lookup
+
+    def get_total(self) -> float:
+        total = 0
+        for item in self.items:
+            product = self.product_lookup.get(item["product_id"])
+            if product:
+                total += product.price * item["qty"]
+        return total
+
+PRODUCTS_CSV = "products.csv"
+ORDERS_JSON = "orders.json"
+
+def load_products(csv_path: str = PRODUCTS_CSV) -> Dict[int, Product]:
+    products = {}
+    if not os.path.exists(csv_path):
+        return products
+    with open(csv_path, newline='', encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            product = Product(
+                id=int(row["id"]),
+                name=row["name"],
+                category=row["category"],
+                price=float(row["price"]),
+                stock=int(row["stock"])
+            )
+            products[product.id] = product
+    return products
+
+def save_products(products: Dict[int, Product], csv_path: str = PRODUCTS_CSV):
+    fieldnames = ["id", "name", "category", "price", "stock"]
+    with open(csv_path, "w", newline='', encoding='utf-8') as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        for p in products.values():
+            writer.writerow({
+                "id": p.id,
+                "name": p.name,
+                "category": p.category,
+                "price": f"{p.price:.2f}",
+                "stock": p.stock
+            })
+
+def print_products(products: Dict[int, Product]):
+    for p in products.values():
+        print(f"{p.id}. {p.name} ({p.category}) - Rs.{p.price} | Stock: {p.stock}")
+
+def most_expensive_product(products: Dict[int, Product]) -> Optional[Product]:
+    if not products:
+        return None
+    return max(products.values(), key=lambda p: p.price)
+
+def load_orders(json_path: str = ORDERS_JSON) -> List[Dict]:
+    if not os.path.exists(json_path):
+        return []
+    with open(json_path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+def save_orders(orders: List[Dict], json_path: str = ORDERS_JSON):
+    with open(json_path, "w", encoding="utf-8") as f:
+        json.dump(orders, f, indent=2)
+
+def process_orders(order_data: List[Dict], products: Dict[int, Product]) -> List[Order]:
+    customers: Dict[str, Customer] = {}
+    orders: List[Order] = []
+    for entry in order_data:
+        name = entry["customer"]
+        if name not in customers:
+            customers[name] = Customer(name)
+        order = Order(order_id=entry["order_id"], customer=customers[name], items=entry["items"], product_lookup=products)
+        customers[name].add_order(order)
+        orders.append(order)
+    return orders
+
+def most_ordered_product(orders: List[Order]) -> Optional[int]:
+    product_counts = {}
+    for order in orders:
+        for item in order.items:
+            pid = item["product_id"]
+            product_counts[pid] = product_counts.get(pid, 0) + item["qty"]
+    if not product_counts:
+        return None
+    return max(product_counts, key=product_counts.get)
+
+def add_order_interactive(orders: List[Dict], products: Dict[int, Product]):
+    next_id = max((o["order_id"] for o in orders), default=100) + 1
+    customer = input("Enter customer name: ").strip()
+    items = []
+    while True:
+        print_products(products)
+        pid = input("Enter product id (or blank to finish): ").strip()
+        if pid == "":
+            break
+        pid = int(pid)
+        if pid not in products:
+            print("Invalid product id")
+            continue
+        qty = int(input("Enter quantity: ").strip())
+        if products[pid].update_stock(qty):
+            items.append({"product_id": pid, "qty": qty})
+        else:
+            print("Not enough stock.")
+    if items:
+        new_order = {"order_id": next_id, "customer": customer, "items": items}
+        orders.append(new_order)
+        save_orders(orders)
+        save_products(products)
+        print(f"Order {next_id} placed successfully.")
+
+def sales_report(orders: List[Order]):
+    total_revenue = sum(order.get_total() for order in orders)
+    revenue_per_category = {}
+    customer_spending = {}
+    for order in orders:
+        customer_spending[order.customer.name] = customer_spending.get(order.customer.name, 0) + order.get_total()
+        for item in order.items:
+            product = order.product_lookup[item["product_id"]]
+            revenue_per_category[product.category] = revenue_per_category.get(product.category, 0) + (product.price * item["qty"])
+    top_customer = max(customer_spending, key=customer_spending.get) if customer_spending else None
+
+    print("\n--- Sales Report ---")
+    print(f"Total Revenue: Rs.{total_revenue:.2f}")
+    print("Revenue per Category:")
+    for cat, rev in revenue_per_category.items():
+        print(f"  {cat}: Rs.{rev:.2f}")
+    print(f"Top Customer: {top_customer} (Spent Rs.{customer_spending[top_customer]:.2f})" if top_customer else "No customers")
+
+def inventory_report(products: Dict[int, Product]):
+    print("\n--- Inventory Report ---")
+    low_stock = [p for p in products.values() if p.stock < 5]
+    if low_stock:
+        print("Low stock products:")
+        for p in low_stock:
+            print(f"  {p.name} ({p.stock} left)")
+    else:
+        print("No low stock products.")
+
+    avg_price_per_category = {}
+    counts = {}
+    for p in products.values():
+        avg_price_per_category[p.category] = avg_price_per_category.get(p.category, 0) + p.price
+        counts[p.category] = counts.get(p.category, 0) + 1
+    print("Average price per category:")
+    for cat in avg_price_per_category:
+        print(f"  {cat}: Rs.{avg_price_per_category[cat]/counts[cat]:.2f}")
+
+def menu():
+    products = load_products()
+    orders_data = load_orders()
+    orders = process_orders(orders_data, products)
+
+    while True:
+        print("\n--- E-Commerce Order Management ---")
+        print("1. View Products")
+        print("2. Place New Order")
+        print("3. View All Orders")
+        print("4. Sales Report")
+        print("5. Inventory Report")
+        print("0. Exit")
+        choice = input("Choose an option: ").strip()
+        if choice == "1":
+            print_products(products)
+        elif choice == "2":
+            add_order_interactive(orders_data, products)
+            orders = process_orders(orders_data, products)
+        elif choice == "3":
+            for order in orders:
+                print(f"Order {order.order_id} by {order.customer.name} | Total: Rs.{order.get_total():.2f}")
+        elif choice == "4":
+            sales_report(orders)
+        elif choice == "5":
+            inventory_report(products)
+        elif choice == "0":
+            save_products(products)
+            save_orders(orders_data)
+            print("Exiting... Data saved.")
+            break
+        else:
+            print("Invalid choice.")
+
+if __name__ == "__main__":
+    menu()
