@@ -1,0 +1,305 @@
+[
+{ "id": 1, "name": "Rahul Sharma", "age": 16, "grade": "10", "marks": { "Math": 90,
+"Science": 85, "English": 88 } },
+{ "id": 2, "name": "Priya Singh", "age": 17, "grade": "11", "marks": { "Math": 78,
+"Science": 82, "English": 91 } },
+{ "id": 3, "name": "Aman Kumar", "age": 16, "grade": "10", "marks": { "Math": 95,
+"Science": 92, "English": 89 } }
+]
+
+id,name,subject,salary
+1,Dr. Mehta,Math,60000
+2,Ms. Iyer,Science,58000
+3,Mr. Kapoor,English,55000
+
+import json
+import csv
+import os
+from typing import List, Dict, Optional
+
+class Person:
+    def __init__(self, name: str, age: int):
+        self.name = name
+        self.age = age
+
+class Student(Person):
+    def __init__(self, id: int, name: str, age: int, grade: str, marks: Dict[str, float]):
+        super().__init__(name, age)
+        self.id = id
+        self.grade = grade
+        self.marks = marks
+
+    def get_average(self) -> float:
+        if not self.marks:
+            return 0.0
+        return sum(self.marks.values()) / len(self.marks)
+
+class Teacher(Person):
+    def __init__(self, id: int, name: str, age: Optional[int], subject: str, salary: float):
+        super().__init__(name, age if age is not None else 0)
+        self.id = id
+        self.subject = subject
+        self.salary = salary
+
+    def get_details(self) -> str:
+        return f"ID: {self.id} | Name: {self.name} | Subject: {self.subject} | Salary: {self.salary:.2f}"
+
+STUDENTS_JSON = "students.json"
+TEACHERS_CSV = "teachers.csv"
+
+def load_students(json_path: str = STUDENTS_JSON) -> List[Student]:
+    if not os.path.exists(json_path):
+        return []
+    with open(json_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    students = []
+    for item in data:
+        students.append(Student(
+            id=item.get("id"),
+            name=item.get("name"),
+            age=item.get("age"),
+            grade=str(item.get("grade")),
+            marks=item.get("marks", {})
+        ))
+    return students
+
+def save_students(students: List[Student], json_path: str = STUDENTS_JSON) -> None:
+    data = []
+    for s in students:
+        data.append({
+            "id": s.id,
+            "name": s.name,
+            "age": s.age,
+            "grade": s.grade,
+            "marks": s.marks
+        })
+    with open(json_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+
+def print_students_with_average(students: List[Student]) -> None:
+    for s in students:
+        avg = s.get_average()
+        print(f"Student ID: {s.id} | Name: {s.name} | Age: {s.age} | Grade: {s.grade} | Average: {avg:.2f}")
+        print(f"  Marks: {s.marks}")
+
+def find_topper(students: List[Student]) -> Optional[Student]:
+    if not students:
+        return None
+    return max(students, key=lambda s: s.get_average())
+
+def add_student_interactive(students: List[Student]) -> Student:
+    next_id = max((s.id for s in students), default=0) + 1
+    name = input("Enter student name: ").strip()
+    age = int(input("Enter age: ").strip())
+    grade = input("Enter grade/class: ").strip()
+    marks = {}
+    print("Enter marks (enter blank subject to finish):")
+    while True:
+        subj = input("  Subject: ").strip()
+        if subj == "":
+            break
+        score = float(input(f"  Marks for {subj}: ").strip())
+        marks[subj] = score
+    new_student = Student(id=next_id, name=name, age=age, grade=grade, marks=marks)
+    students.append(new_student)
+    save_students(students)
+    print(f"Added student {new_student.name} with ID {new_student.id}")
+    return new_student
+def load_teachers(csv_path: str = TEACHERS_CSV) -> List[Teacher]:
+    teachers = []
+    if not os.path.exists(csv_path):
+        return teachers
+    with open(csv_path, newline='', encoding='utf-8') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            id = int(row.get("id"))
+            name = row.get("name")
+            subject = row.get("subject")
+            salary_raw = row.get("salary", "0")
+            try:
+                salary = float(salary_raw)
+            except:
+                salary = 0.0
+            teachers.append(Teacher(id=id, name=name, age=None, subject=subject, salary=salary))
+    return teachers
+
+def save_teachers(teachers: List[Teacher], csv_path: str = TEACHERS_CSV) -> None:
+    fieldnames = ["id", "name", "subject", "salary"]
+    with open(csv_path, "w", newline='', encoding='utf-8') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for t in teachers:
+            writer.writerow({
+                "id": t.id,
+                "name": t.name,
+                "subject": t.subject,
+                "salary": f"{t.salary:.2f}"
+            })
+
+def print_teachers(teachers: List[Teacher]) -> None:
+    for t in teachers:
+        print(t.get_details())
+
+def average_teacher_salary(teachers: List[Teacher]) -> float:
+    if not teachers:
+        return 0.0
+    return sum(t.salary for t in teachers) / len(teachers)
+
+def highest_paid_teacher(teachers: List[Teacher]) -> Optional[Teacher]:
+    if not teachers:
+        return None
+    return max(teachers, key=lambda t: t.salary)
+
+def add_teacher_interactive(teachers: List[Teacher]) -> Teacher:
+    next_id = max((t.id for t in teachers), default=0) + 1
+    name = input("Enter teacher name: ").strip()
+    subject = input("Enter subject: ").strip()
+    salary = float(input("Enter salary: ").strip())
+    new_teacher = Teacher(id=next_id, name=name, age=None, subject=subject, salary=salary)
+    teachers.append(new_teacher)
+    save_teachers(teachers)
+    print(f"Added teacher {new_teacher.name} with ID {new_teacher.id}")
+    return new_teacher
+
+def student_to_class_teacher_report(students: List[Student], teachers: List[Teacher]) -> Dict[str, Optional[str]]:
+    subj_to_teacher = {t.subject: t for t in teachers}
+    report = {}
+    for s in students:
+        if not s.marks:
+            report[s.name] = None
+            continue
+        max_score = max(s.marks.values())
+        top_subjects = [sub for sub, sc in s.marks.items() if sc == max_score]
+        chosen_subject = sorted(top_subjects)[0]
+        teacher = subj_to_teacher.get(chosen_subject)
+        report[s.name] = teacher.name if teacher else None
+    return report
+
+def total_students_per_grade(students: List[Student]) -> Dict[str, int]:
+    counts = {}
+    for s in students:
+        counts[s.grade] = counts.get(s.grade, 0) + 1
+    return counts
+
+def average_marks_per_subject(students: List[Student]) -> Dict[str, float]:
+    totals = {}
+    counts = {}
+    for s in students:
+        for subj, score in s.marks.items():
+            totals[subj] = totals.get(subj, 0.0) + score
+            counts[subj] = counts.get(subj, 0) + 1
+    averages = {}
+    for subj in totals:
+        averages[subj] = totals[subj] / counts[subj] if counts[subj] else 0.0
+    return averages
+
+def total_salary_spent(teachers: List[Teacher]) -> float:
+    return sum(t.salary for t in teachers)
+
+def print_report_all(students: List[Student], teachers: List[Teacher]) -> None:
+    print("\n--- Students and their average marks ---")
+    print_students_with_average(students)
+
+    topper = find_topper(students)
+    if topper:
+        print(f"\nTopper: {topper.name} (Average: {topper.get_average():.2f})")
+    else:
+        print("\nTopper: None")
+
+    print("\n--- Teachers ---")
+    print_teachers(teachers)
+
+    avg_salary = average_teacher_salary(teachers)
+    print(f"\nAverage teacher salary: {avg_salary:.2f}")
+    highest_paid = highest_paid_teacher(teachers)
+    if highest_paid:
+        print(f"Highest paid teacher: {highest_paid.name} ({highest_paid.salary:.2f})")
+    else:
+        print("Highest paid teacher: None")
+
+    print("\n--- Student -> Class Teacher Report ---")
+    mapping = student_to_class_teacher_report(students, teachers)
+    for student_name, teacher_name in mapping.items():
+        print(f"{student_name} -> {teacher_name if teacher_name else 'No matching teacher'}")
+
+    print("\n--- Summary ---")
+    print("Total number of students per grade:")
+    for grade, cnt in total_students_per_grade(students).items():
+        print(f"  Grade {grade}: {cnt}")
+
+    print("\nAverage marks per subject across all students:")
+    for subj, avg in average_marks_per_subject(students).items():
+        print(f"  {subj}: {avg:.2f}")
+
+    print(f"\nTotal salary spent on teachers: {total_salary_spent(teachers):.2f}")
+
+def ensure_default_files():
+    if not os.path.exists(STUDENTS_JSON):
+        default_students = [
+            {"id": 1, "name": "Rahul Sharma", "age": 16, "grade": "10", "marks": {"Math": 90, "Science": 85, "English": 88}},
+            {"id": 2, "name": "Priya Singh", "age": 17, "grade": "11", "marks": {"Math": 78, "Science": 82, "English": 91}},
+            {"id": 3, "name": "Aman Kumar", "age": 16, "grade": "10", "marks": {"Math": 95, "Science": 92, "English": 89}}
+        ]
+        with open(STUDENTS_JSON, "w", encoding="utf-8") as f:
+            json.dump(default_students, f, indent=2, ensure_ascii=False)
+    if not os.path.exists(TEACHERS_CSV):
+        default_teachers = [
+            {"id": "1", "name": "Dr. Mehta", "subject": "Math", "salary": "60000"},
+            {"id": "2", "name": "Ms. Iyer", "subject": "Science", "salary": "58000"},
+            {"id": "3", "name": "Mr. Kapoor", "subject": "English", "salary": "55000"}
+        ]
+        with open(TEACHERS_CSV, "w", newline='', encoding='utf-8') as csvfile:
+            fieldnames = ["id", "name", "subject", "salary"]
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            for row in default_teachers:
+                writer.writerow(row)
+
+def menu():
+    ensure_default_files()
+    students = load_students()
+    teachers = load_teachers()
+
+    while True:
+        print("\n--- School Management System ---")
+        print("1. View all students")
+        print("2. View all teachers")
+        print("3. Add a new student")
+        print("4. Add a new teacher")
+        print("5. Generate full report")
+        print("6. Print topper")
+        print("7. Save & Reload data")
+        print("0. Exit")
+        choice = input("Choose an option: ").strip()
+        if choice == "1":
+            print_students_with_average(students)
+        elif choice == "2":
+            print_teachers(teachers)
+        elif choice == "3":
+            add_student_interactive(students)
+        elif choice == "4":
+            add_teacher_interactive(teachers)
+        elif choice == "5":
+            print_report_all(students, teachers)
+        elif choice == "6":
+            topper = find_topper(students)
+            if topper:
+                print(f"Topper: {topper.name} (Average: {topper.get_average():.2f})")
+            else:
+                print("No students available.")
+        elif choice == "7":
+            save_students(students)
+            save_teachers(teachers)
+            students = load_students()
+            teachers = load_teachers()
+            print("Data saved and reloaded.")
+        elif choice == "0":
+            save_students(students)
+            save_teachers(teachers)
+            print("Exiting. Data saved.")
+            break
+        else:
+            print("Invalid choice. Please try again.")
+
+if __name__ == "__main__":
+    menu()
