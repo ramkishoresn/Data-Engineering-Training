@@ -1,0 +1,49 @@
+[
+  {
+    "order_id": "O1001",
+    "supplier_id": "SUP1",
+    "sku": "SKU1001",
+    "quantity": 10,
+    "order_date": "2025-08-25",
+    "delivery_date": "2025-09-05",
+    "status": "delivered"
+  },
+  {
+    "order_id": "O1002",
+    "supplier_id": "SUP2",
+    "sku": "SKU1002",
+    "quantity": 5,
+    "order_date": "2025-08-28",
+    "delivery_date": "2025-09-10",
+    "status": "delayed"
+  },
+  {
+    "order_id": "O1003",
+    "supplier_id": "SUP1",
+    "sku": "SKU1003",
+    "quantity": 20,
+    "order_date": "2025-09-01",
+    "delivery_date": "2025-09-15",
+    "status": "in_transit"
+  }
+]
+
+import pandas as pd
+import numpy as np
+import requests
+
+data = pd.read_json("sample_orders.json")
+
+data['order_date'] = pd.to_datetime(data['order_date'])
+data['delivery_date'] = pd.to_datetime(data['delivery_date'])
+data['quantity'] = data['quantity'].fillna(0).astype(int)
+
+today = pd.Timestamp.today()
+data['delay_days'] = (today - data['delivery_date']).dt.days
+data['is_delayed'] = np.where(data['delay_days'] > 0, 1, 0)
+
+data['stock_impact'] = data['quantity'] * data['is_delayed']
+
+print(data[['order_id','supplier_id','sku','quantity','delay_days','is_delayed','stock_impact','status']])
+
+data.to_csv("cleaned_orders.csv", index=False)
