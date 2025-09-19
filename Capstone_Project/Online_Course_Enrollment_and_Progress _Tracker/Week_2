@@ -1,0 +1,37 @@
+student_id,course_id,completion
+1,1,50
+2,1,75
+3,2,100
+4,2,
+5,3,110
+6,3,40
+
+
+import pandas as pd
+import numpy as np
+
+df = pd.read_csv("progress.csv")
+print("Raw Data:")
+print(df)
+
+df['completion'] = df['completion'].fillna(0)      
+df['completion'] = np.clip(df['completion'], 0, 100) 
+print("\nCleaned Data:")
+print(df)
+
+course_summary = df.groupby('course_id')['completion'].mean()
+print("\nAverage Completion Rate per Course:")
+print(course_summary)
+
+dropouts = df[df['completion'] == 0]
+print("\nDropouts:")
+print(dropouts)
+
+popular_courses = df['course_id'].value_counts()
+print("\nPopular Courses (by enrollment):")
+print(popular_courses)
+
+print("\nReports:")
+print(f"Total Students: {df['student_id'].nunique()}")
+print(f"Total Courses: {df['course_id'].nunique()}")
+print(f"Average Overall Completion: {df['completion'].mean():.2f}%")
