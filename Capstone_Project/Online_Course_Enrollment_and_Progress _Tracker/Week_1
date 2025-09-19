@@ -1,4 +1,4 @@
-CREATE DATABASE online_course_tracker;
+CREATE DATABASE IF NOT EXISTS online_course_tracker;
 USE online_course_tracker;
 
 CREATE TABLE students (
@@ -19,7 +19,7 @@ CREATE TABLE enrollments (
     enrollment_id INT AUTO_INCREMENT PRIMARY KEY,
     student_id INT,
     course_id INT,
-    enrollment_date DATE DEFAULT CURRENT_DATE,
+    enrollment_date DATETIME DEFAULT CURRENT_TIMESTAMP,
     status ENUM('Enrolled','Dropped','Completed') DEFAULT 'Enrolled',
     FOREIGN KEY (student_id) REFERENCES students(student_id),
     FOREIGN KEY (course_id) REFERENCES courses(course_id)
@@ -31,32 +31,30 @@ CREATE TABLE progress (
     completed_modules INT DEFAULT 0,
     total_modules INT,
     last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (enrollment_id) REFERENCES enrollments(enrollment_id)
+    FOREIGN KEY (enrollment_id) REFERENCES enrollments(enrollment_id) ON DELETE CASCADE
 );
 
-INSERT INTO students (name, email, city)
-VALUES ('Rahul Sharma', 'rahul@example.com', 'Bangalore');
+INSERT INTO students (name, email, city) VALUES
+('Rahul Sharma', 'rahul@example.com', 'Bangalore'),
+('Priya Singh', 'priya@example.com', 'Delhi'),
+('Aman Verma', 'aman@example.com', 'Mumbai');
 
-INSERT INTO courses (title, description, duration_weeks)
-VALUES ('Python Basics', 'Learn Python from scratch', 6);
+INSERT INTO courses (title, description, duration_weeks) VALUES
+('Python Basics', 'Learn Python from scratch', 6),
+('Databases 101', 'Intro to SQL & NoSQL databases', 4),
+('Data Science with Python', 'Intermediate data science course', 8);
 
-INSERT INTO enrollments (student_id, course_id, status)
-VALUES (1, 1, 'Enrolled');
+INSERT INTO enrollments (student_id, course_id, status) VALUES
+(1, 1, 'Enrolled'),
+(1, 2, 'Enrolled'),
+(2, 1, 'Completed'),
+(3, 3, 'Enrolled');
 
-INSERT INTO progress (enrollment_id, completed_modules, total_modules)
-VALUES (1, 2, 10);
-
-UPDATE progress
-SET completed_modules = 5
-WHERE progress_id = 1;
-
-UPDATE enrollments
-SET status = 'Dropped'
-WHERE enrollment_id = 1;
-
-DELETE FROM enrollments
-WHERE enrollment_id = 1;
-
+INSERT INTO progress (enrollment_id, completed_modules, total_modules) VALUES
+(1, 2, 10),   
+(2, 3, 6),    
+(3, 6, 6),    
+(4, 4, 8);    
 
 DELIMITER $$
 
@@ -66,20 +64,30 @@ BEGIN
     DECLARE total INT;
     DECLARE pct DECIMAL(5,2);
 
-    SELECT p.completed_modules, p.total_modules
+    SELECT SUM(p.completed_modules), SUM(p.total_modules)
     INTO comp, total
     FROM progress p
     JOIN enrollments e ON p.enrollment_id = e.enrollment_id
     WHERE e.student_id = studentId AND e.course_id = courseId;
 
-    SET pct = (comp / total) * 100;
+    IF total > 0 THEN
+        SET pct = (comp / total) * 100;
+    ELSE
+        SET pct = 0;
+    END IF;
+
     SELECT CONCAT('Completion: ', pct, '%') AS completion_percentage;
 END $$
-
 DELIMITER ;
 
+CALL get_completion_percentage(1, 1); 
+CALL get_completion_percentage(2, 1); 
+CALL get_completion_percentage(3, 3); 
 
-use onlineCourseDB
+
+use onlineCourseDB;
+
+db.feedback.drop();
 
 db.feedback.insertMany([
   {
@@ -102,10 +110,22 @@ db.feedback.insertMany([
     rating: 3,
     comment: "Average experience, could be improved.",
     date: new Date()
+  },
+  {
+    student_id: 3,
+    course_id: 3,
+    rating: 5,
+    comment: "Challenging but very rewarding!",
+    date: new Date()
   }
-])
+]);
+
 db.feedback.createIndex({ student_id: 1 });
-
 db.feedback.createIndex({ course_id: 1 });
-
 db.feedback.createIndex({ student_id: 1, course_id: 1 });
+
+db.feedback.find({ course_id: 1 }).pretty();
+db.feedback.aggregate([
+  { $group: { _id: "$course_id", avgRating: { $avg: "$rating" } } }
+]);
+
