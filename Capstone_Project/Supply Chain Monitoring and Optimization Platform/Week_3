@@ -1,0 +1,30 @@
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col, count, sum
+
+spark = SparkSession.builder.appName("SupplyChain-Week3").getOrCreate()
+
+orders_df = spark.read.csv("cleaned_orders.csv", header=True, inferSchema=True)
+
+print("=== Cleaned Orders (from Week 2) ===")
+orders_df.show()
+
+delayed_df = orders_df.filter(col("is_delayed") == 1)
+
+print("=== Delayed Shipments Only ===")
+delayed_df.show()
+
+supplier_delay_summary = (
+    delayed_df.groupBy("supplier_id")
+    .agg(
+        count("order_id").alias("delayed_orders_count"),
+        sum("stock_impact").alias("total_stock_impact")
+    )
+)
+
+print("=== Supplier Delay Summary ===")
+supplier_delay_summary.show()
+
+supplier_delay_summary.write.mode("overwrite").csv("output/supplier_delay_summary_csv", header=True)
+supplier_delay_summary.write.mode("overwrite").parquet("output/supplier_delay_summary_parquet")
+
+print("Processing complete. Results saved in /output folder.")
