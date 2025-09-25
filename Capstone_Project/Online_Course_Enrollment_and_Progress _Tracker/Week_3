@@ -1,0 +1,68 @@
+
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col, avg, count, when
+
+spark = SparkSession.builder.appName("CourseAnalysis").getOrCreate()
+
+students_data = [
+    (1, "Rahul Sharma", "rahul@example.com", "Bangalore"),
+    (2, "Priya Singh", "priya@example.com", "Delhi"),
+    (3, "Aman Verma", "aman@example.com", "Mumbai"),
+    (4, "Fake Student", "fake@example.com", "Chennai")
+]
+students_df = spark.createDataFrame(students_data, ["student_id", "name", "email", "city"])
+
+courses_data = [
+    (1, "Python Basics", "Learn Python from scratch", 6),
+    (2, "Databases 101", "Intro to SQL & NoSQL databases", 4),
+    (3, "Data Science with Python", "Intermediate data science course", 8)
+]
+courses_df = spark.createDataFrame(courses_data, ["course_id", "title", "description", "duration_weeks"])
+
+enrollments_data = [
+    (1, 1, 1, "2025-09-01", "Enrolled"),
+    (2, 1, 2, "2025-09-05", "Enrolled"),
+    (3, 2, 1, "2025-09-10", "Completed"),
+    (4, 3, 3, "2025-09-12", "Enrolled"),
+    (5, 4, 3, "2025-09-13", "Dropped")
+]
+enrollments_df = spark.createDataFrame(enrollments_data, ["enrollment_id", "student_id", "course_id", "enrollment_date", "status"])
+
+progress_data = [
+    (1, 2, 10),  
+    (2, 3, 6),  
+    (3, 6, 6),   
+    (4, 4, 8),   
+    (5, 0, 8)   
+]
+progress_df = spark.createDataFrame(progress_data, ["enrollment_id", "completed_modules", "total_modules"])
+
+joined_df = enrollments_df \
+    .join(students_df, "student_id") \
+    .join(courses_df, "course_id") \
+    .join(progress_df, "enrollment_id")
+
+print("=== Joined Data ===")
+joined_df.show(truncate=False)
+
+
+course_progress = joined_df.groupBy("title") \
+    .agg(
+        count("*").alias("total_enrolled"),
+        count(when(col("status") == "Completed", True)).alias("completed_students"),
+        count(when(col("status") == "Dropped", True)).alias("dropped_students"),
+        avg((col("completed_modules") / col("total_modules")) * 100).alias("avg_completion_rate")
+    )
+
+print("=== Course Progress Summary ===")
+course_progress.show(truncate=False)
+
+
+most_popular = course_progress.orderBy(col("total_enrolled").desc()).limit(1)
+most_dropped = course_progress.orderBy(col("dropped_students").desc()).limit(1)
+
+print("=== Most Popular Course ===")
+most_popular.show()
+
+print("=== Most Dropped-Out Course ===")
+most_dropped.show()
