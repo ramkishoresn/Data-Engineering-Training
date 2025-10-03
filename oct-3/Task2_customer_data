@@ -1,0 +1,62 @@
+!pip install pyspark
+
+from pyspark.sql import SparkSession
+from pyspark.sql import functions as F
+
+spark = SparkSession.builder.appName("RetailStoreAnalysis").getOrCreate()
+
+customers_data = [
+    (1, "Rahul", "Bangalore", 25),
+    (2, "Priya", "Delhi", 32),
+    (3, "Aman", "Hyderabad", 29),
+    (4, "Sneha", "Chennai", 35)
+]
+customers_cols = ["customer_id", "name", "city", "age"]
+
+orders_data = [
+    (101, 1, "Laptop", 55000),
+    (102, 2, "Mobile", 25000),
+    (103, 1, "Headphones", 3000),
+    (104, 3, "Book", 700),
+    (105, 4, "Chair", 5000),
+    (106, 2, "Shoes", 2000)
+]
+orders_cols = ["order_id", "customer_id", "product", "amount"]
+
+customers_df = spark.createDataFrame(customers_data, customers_cols)
+orders_df    = spark.createDataFrame(orders_data, orders_cols)
+
+customers_df.filter(F.col("age") > 30).show()
+
+customers_df.select("city").distinct().show()
+
+orders_df.groupBy("customer_id").agg(F.sum("amount").alias("total_spent")).show()
+
+orders_df.agg(F.avg("amount").alias("avg_order_amount")).show()
+
+orders_df.orderBy(F.desc("amount")).limit(1).show()
+
+
+customers_df.join(orders_df, "customer_id").select("name","city","product","amount").show()
+
+
+orders_df.join(customers_df, "customer_id") \
+    .groupBy("city").agg(F.sum("amount").alias("total_spent")) \
+    .orderBy(F.desc("total_spent")).show(1)
+
+customers_df.createOrReplaceTempView("customers")
+orders_df.createOrReplaceTempView("orders")
+
+spark.sql("""
+    SELECT c.customer_id, c.name, SUM(o.amount) AS total_spent
+    FROM customers c
+    JOIN orders o
+      ON c.customer_id = o.customer_id
+    GROUP BY c.customer_id, c.name
+    ORDER BY total_spent DESC
+    LIMIT 2
+""").show()
+
+output_path = "/content/orders_csv"
+orders_df.write.mode("overwrite").option("header", True).csv(output_path)
+spark.read.option("header", True).option("inferSchema", True).csv(output_path).show()
