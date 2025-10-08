@@ -1,0 +1,37 @@
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col, when, round, avg, count
+
+spark = SparkSession.builder.appName("SupplyChainETL").getOrCreate()
+
+orders_df = spark.read.csv("/FileStore/tables/cleaned_orders.csv", header=True, inferSchema=True)
+
+suppliers_df = spark.read.csv("/FileStore/tables/suppliers.csv", header=True, inferSchema=True)
+
+joined_df = orders_df.join(suppliers_df, on="supplier_id", how="left")
+
+cleaned_df = (
+    joined_df
+    .filter(col("status").isNotNull())
+    .withColumn("delay_days", when(col("delay_days") < 0, 0).otherwise(col("delay_days")))
+    .withColumn("is_delayed", when(col("delay_days") > 0, 1).otherwise(0))
+)
+
+delay_summary = (
+    cleaned_df.groupBy("supplier_id", "name")
+    .agg(
+        count(when(col("is_delayed") == 1, True)).alias("delayed_orders"),
+        round(avg("delay_days"), 2).alias("avg_delay_days")
+    )
+)
+
+print("=== Cleaned and Joined Data ===")
+display(cleaned_df.select("order_id", "supplier_id", "sku", "quantity", "delay_days", "is_delayed", "status", "name"))
+
+print("=== Delay Summary by Supplier ===")
+display(delay_summary)
+
+cleaned_df.write.format("delta").mode("overwrite").save("/FileStore/delta/cleaned_orders_delta")
+delay_summary.write.csv("/FileStore/tables/delay_summary.csv", header=True, mode="overwrite")
+
+print("ETL pipeline completed and data saved successfully.")
+
