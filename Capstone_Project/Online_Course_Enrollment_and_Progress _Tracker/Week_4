@@ -1,0 +1,61 @@
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col, when, avg, count, round
+
+spark = SparkSession.builder.appName("OnlineCourseETL").getOrCreate()
+
+cleaned_df = spark.read.option("header", True).csv("/FileStore/tables/cleaned_progress_data.csv", inferSchema=True)
+course_summary_df = spark.read.option("header", True).csv("/FileStore/tables/course_summary.csv", inferSchema=True)
+
+print("=== Cleaned Progress Data ===")
+cleaned_df.show()
+
+print("=== Course Summary Data ===")
+course_summary_df.show()
+
+students = [
+    (1, "Rahul Sharma", "rahul@example.com", "Bangalore"),
+    (2, "Priya Singh", "priya@example.com", "Delhi"),
+    (3, "Aman Verma", "aman@example.com", "Mumbai")
+]
+courses = [
+    (1, "Python Basics", "Learn Python from scratch", 6),
+    (2, "Databases 101", "Intro to SQL & NoSQL databases", 4),
+    (3, "Data Science with Python", "Intermediate data science course", 8)
+]
+
+students_df = spark.createDataFrame(students, ["student_id", "name", "email", "city"])
+courses_df = spark.createDataFrame(courses, ["course_id", "title", "description", "duration_weeks"])
+
+final_df = cleaned_df.join(students_df, "student_id", "left") \
+                     .join(courses_df, "course_id", "left") \
+                     .select(
+                         "student_id", "name", "city",
+                         "course_id", "title", "duration_weeks",
+                         "completion", "last_updated"
+                     )
+
+print("=== Final Joined Table ===")
+display(final_df)
+
+final_df = final_df.withColumn(
+    "progress_status",
+    when(col("completion") >= 100, "Completed")
+    .when(col("completion") >= 50, "In Progress")
+    .otherwise("Low Progress")
+)
+
+
+course_insights = final_df.groupBy("title").agg(
+    count("*").alias("total_students"),
+    count(when(col("progress_status") == "Completed", True)).alias("completed_students"),
+    round(avg("completion"), 2).alias("avg_completion_rate")
+)
+
+print("=== Course Insights ===")
+display(course_insights)
+
+
+final_df.write.format("delta").mode("overwrite").save("/FileStore/delta/final_course_progress")
+course_insights.write.format("csv").mode("overwrite").option("header", True).save("/FileStore/tables/course_insights.csv")
+
+print("ETL Completed: Data saved as Delta & CSV")
