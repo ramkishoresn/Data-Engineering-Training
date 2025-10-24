@@ -1,0 +1,5 @@
+enrollment_id,student_id,course_id,enrollment_date,completion_status
+1,101,501,2023-09-01,In Progress
+2,102,502,2023-10-05,Completed
+3,103,501,2023-11-10,In Progress
+4,101,503,2023-12-01,Dropped
