@@ -1,0 +1,58 @@
+import pandas as pd
+import numpy as np
+
+# --- 1. Load Data from CSV or Mock API (Simulating the combined data from Week 1) ---
+
+# We use mock data for robustness, including all necessary columns
+# and some intentional invalid/missing entries for the cleaning step.
+print("--- Initializing DataFrames via Mock Setup ---")
+data = {
+    'enrollment_id': [1, 2, 3, 4, 5, 6, 7],
+    'student_id': [101, 102, 103, 101, 104, 105, 106],
+    'course_id': [501, 502, 501, 503, 504, 501, 502],
+    'total_modules': [10, 8, 10, 12, 15, 10, 8],
+    'modules_completed': [4.0, 8.0, 1.0, 0.0, 3.0, np.nan, 12.0], # np.nan is a missing value
+    'completion_status': ['In Progress', 'Completed', 'In Progress', 'Dropped', None, 'In Progress', 'In Progress'], # None is a missing value
+    'enrollment_date': ['2023-09-01', '2023-10-05', '2023-11-10', '2023-12-01', '2023-12-15', '2024-01-01', '2024-01-10']
+}
+df = pd.DataFrame(data)
+
+# --- 2. Clean Invalid Entries (Missing Data & Percentages)  ---
+print("\n--- Data Cleaning ---")
+
+# a) Handle missing progress: Replace missing 'modules_completed' with 0.
+df['modules_completed'] = df['modules_completed'].fillna(0)
+
+# b) Handle missing completion status (a general cleaning requirement): Fill with 'In Progress'
+df['completion_status'] = df['completion_status'].fillna('In Progress')
+
+# c) Calculate the base completion column as a percentage (used in the sample snippet)
+# Avoid division by zero by using .where() or handling NaN later
+df['completion_percentage'] = (df['modules_completed'] / df['total_modules']) * 100
+
+# d) Clean/Clip percentages: Use numpy.clip to ensure percentage is between 0 and 100 [cite: 18]
+df['completion_percentage'] = np.clip(df['completion_percentage'], 0, 100)
+
+# e) Handle potential errors from over-completed courses (e.g., 12/8 modules = 150%)
+# The np.clip handles this by setting it to 100.0.
+
+print("Missing data handled and completion percentage calculated.")
+
+# --- 3. Use NumPy to Calculate Average Progress  ---
+print("\n--- NumPy Calculation ---")
+overall_average_progress = np.mean(df['completion_percentage'])
+print(f"Overall Average Progress Across All Enrollments: {overall_average_progress:.2f}%")
+
+# --- 4. Use Pandas to Group by Course and Compute Average Completion Rates  ---
+print("\n--- Pandas Grouping and Aggregation (Deliverable Report) ---")
+
+# Group by 'course_id' and compute the mean of the 'completion_percentage' [cite: 19]
+summary_report = df.groupby('course_id')['completion_percentage'].mean().reset_index()
+summary_report.rename(columns={'completion_percentage': 'avg_completion_rate'}, inplace=True)
+
+print("Course-Level Average Completion Rates Report:")
+print(summary_report)
+
+# --- Deliverables Output ---
+print("\n--- Deliverable: Cleaned Data Showing Student Progress (Preview) ---")
+print(df[['student_id', 'course_id', 'completion_status', 'modules_completed', 'total_modules', 'completion_percentage']])
