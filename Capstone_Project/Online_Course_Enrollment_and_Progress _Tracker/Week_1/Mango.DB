@@ -1,0 +1,68 @@
+db["Online cource tracker"].find()
+use CourseTrackerReviews
+switched to db CourseTrackerReviews
+db.createCollection("course_feedback")
+{ ok: 1 }
+// Insert sample course reviews and feedback
+db.course_feedback.insertMany([
+    {
+        student_id: 101, // Alice Johnson
+        course_id: 501, // Data Science Fundamentals
+        rating: 4,
+        review_text: "Great intro, but the Python section felt rushed. Need more hands-on labs.",
+        date_submitted: new Date("2023-10-15T10:00:00Z"),
+        module_feedback: [
+            { module_num: 3, comment: "Excellent explanation of Pandas dataframes." },
+            { module_num: 7, comment: "Video quality was poor in the ML section." }
+        ]
+    },
+    {
+        student_id: 102, // Bob Smith
+        course_id: 502, // Cloud Computing Basics
+        rating: 5,
+        review_text: "Absolutely fantastic! Highly recommend for anyone starting with cloud services. Very practical.",
+        date_submitted: new Date("2023-12-20T14:30:00Z"),
+        is_verified_completion: true // Custom field to show document flexibility
+    },
+    {
+        student_id: 103, // Carol Lee
+        course_id: 501, // Data Science Fundamentals
+        rating: 2,
+        review_text: "The course materials were outdated. I dropped it to find a newer resource.",
+        date_submitted: new Date("2023-12-01T08:00:00Z")
+    },
+    {
+        student_id: 101, // Alice Johnson
+        course_id: 503, // Advanced SQL & Databases
+        rating: 1,
+        review_text: "Did not even start. The prerequisites were not clear.",
+        date_submitted: new Date("2023-12-05T12:00:00Z")
+    }
+])
+{
+  acknowledged: true,
+  insertedIds: {
+    '0': ObjectId('68fb597a18ec4c1e6afbe17d'),
+    '1': ObjectId('68fb597a18ec4c1e6afbe17e'),
+    '2': ObjectId('68fb597a18ec4c1e6afbe17f'),
+    '3': ObjectId('68fb597a18ec4c1e6afbe180')
+  }
+}
+// Add an index to search quickly by student_id
+db.course_feedback.createIndex({ student_id: 1 })
+
+// Add an index to search quickly by course_id
+db.course_feedback.createIndex({ course_id: 1 })
+course_id_1
+// Example 1: Find all feedback for Alice Johnson (student_id 101)
+db.course_feedback.find({ student_id: 101 }).pretty()
+
+// Example 2: Find the average rating for Data Science Fundamentals (course_id 501)
+db.course_feedback.aggregate([
+    { $match: { course_id: 501 } },
+    { $group: { _id: "$course_id", average_rating: { $avg: "$rating" } } }
+])
+{
+  _id: 501,
+  average_rating: 3
+}
