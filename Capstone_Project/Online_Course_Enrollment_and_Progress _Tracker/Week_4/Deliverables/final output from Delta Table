@@ -1,0 +1,9 @@
++-------------+-------------------------+---------------+-------------------+-----------------+
+|student_name |course                   |enrollment_date|progress_percentage|completion_status|
++-------------+-------------------------+---------------+-------------------+-----------------+
+|Alice Johnson|Data Science Fundamentals|2023-09-01     |40.0               |In Progress      |
+|Alice Johnson|Advanced SQL & Databases |2023-12-01     |0.0                |Dropped          |
+|Bob Smith    |Cloud Computing Basics   |2023-10-05     |100.0              |Completed        |
+|Carol Lee    |Data Science Fundamentals|2023-11-10     |10.0               |In Progress      |
+|David Brown  |Intro to Tableau         |2023-12-15     |20.0               |In Progress      |
++-------------+-------------------------+---------------+-------------------+-----------------+
