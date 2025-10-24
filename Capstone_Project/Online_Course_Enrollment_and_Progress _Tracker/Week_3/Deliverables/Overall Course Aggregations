@@ -1,0 +1,5 @@
+course_id,total_enrolled,total_completed_count,total_dropped_count,avg_progress_percent
+501,3,0,0,16.67
+502,3,2,0,100.00
+503,3,0,2,25.00
+504,1,0,0,20.00
