@@ -1,0 +1,71 @@
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col, count, sum, avg, when, lit, coalesce, round, desc
+
+# 1. Initialize Spark Session (Mandatory for PySpark execution)
+spark = SparkSession.builder.appName("Week3CourseAnalysis").getOrCreate()
+print("PySpark session initialized.")
+
+# --- 2. Load Large Enrollment and Progress Data (Using Week 2 Cleaned Data Structure) ---
+# Simulates loading a large, merged file from distributed storage (e.g., S3/ADLS).
+# Data columns correspond to the output of the Week 2 cleaning step.
+data_week2_cleaned = [
+    (1, 101, 501, 10, 4.0, 'In Progress'),
+    (2, 102, 502, 8, 8.0, 'Completed'),
+    (3, 103, 501, 10, 1.0, 'In Progress'),
+    (4, 101, 503, 12, 0.0, 'Dropped'),
+    (5, 104, 504, 15, 3.0, 'In Progress'),
+    (6, 105, 501, 10, 0.0, 'In Progress'),
+    (7, 106, 502, 8, 12.0, 'Completed'),   # Over-completed student (tests clipping)
+    (8, 107, 503, 12, 6.0, 'In Progress'),
+    (9, 108, 503, 12, 0.0, 'Dropped')
+]
+columns = ["enrollment_id", "student_id", "course_id", "total_modules", "modules_completed", "completion_status"]
+
+df_data = spark.createDataFrame(data_week2_cleaned, columns)
+
+# --- 3. Join Tables to Get Course-wise Progress (Calculation and Flags) ---
+# *The logic here is PySpark's way of executing the 'Join tables' task.*
+
+# Calculate completion percentage and clip values at 100%
+df_progress_calculated = df_data.withColumn(
+    "completion_percentage",
+    (col("modules_completed") / col("total_modules")) * 100
+).withColumn(
+    # Ensure percentage does not exceed 100%
+    "completion_percentage",
+    when(col("completion_percentage") > 100, 100).otherwise(col("completion_percentage"))
+)
+
+# Create binary flags for aggregation: 1 if the condition is met, 0 otherwise
+df_flags = df_progress_calculated.withColumn(
+    "is_completed",
+    when(col("completion_percentage") >= 100, 1).otherwise(0)
+).withColumn(
+    "is_dropped",
+    when(col("completion_status") == "Dropped", 1).otherwise(0)
+)
+
+# --- 4. Group by Course to Count Total Enrolled and Completed Students (Aggregation) ---
+
+df_analysis = df_flags.groupBy("course_id").agg(
+    count(col("student_id")).alias("total_enrolled"),
+    sum(col("is_completed")).alias("total_completed_count"),
+    sum(col("is_dropped")).alias("total_dropped_count"),
+    round(avg(col("completion_percentage")), 2).alias("avg_progress_percent")
+)
+
+# --- DELIVERABLE: Output Showing Top Completed and Dropped-out Courses ---
+
+
+# Output 1: Top Completed Courses
+print("\n--- Top Courses by Completed Students ---")
+df_completed_ranking = df_analysis.orderBy(desc("total_completed_count"))
+df_completed_ranking.show(5, False)
+
+# Output 2: Top Dropped-out Courses
+print("\n--- Top Courses by Dropped-out Students ---")
+df_dropped_ranking = df_analysis.orderBy(desc("total_dropped_count"))
+df_dropped_ranking.show(5, False)
+
+# Stop the Spark session
+spark.stop()
