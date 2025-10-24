@@ -1,0 +1,8 @@
+student_id,course_id,completion_status,modules_completed,total_modules,completion_percentage
+101,501,In Progress,4.0,10,40.00
+102,502,Completed,8.0,8,100.00
+103,501,In Progress,1.0,10,10.00
+101,503,Dropped,0.0,12,0.00
+104,504,In Progress,3.0,15,20.00
+105,501,In Progress,0.0,10,0.00
+106,502,In Progress,12.0,8,100.00
