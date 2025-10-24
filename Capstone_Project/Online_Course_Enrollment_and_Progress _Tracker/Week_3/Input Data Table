@@ -1,0 +1,10 @@
+enrollment_id,student_id,course_id,total_modules,modules_completed,completion_status
+1,101,501,10,4.0,In Progress
+2,102,502,8,8.0,Completed
+3,103,501,10,1.0,In Progress
+4,101,503,12,0.0,Dropped
+5,104,504,15,3.0,In Progress
+6,105,501,10,0.0,In Progress
+7,106,502,8,12.0,Completed*
+8,107,503,12,6.0,In Progress
+9,108,503,12,0.0,Dropped
