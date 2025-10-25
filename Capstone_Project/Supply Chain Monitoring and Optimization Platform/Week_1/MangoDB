@@ -1,0 +1,55 @@
+use supplyChainMonitoringDB
+switched to db supplyChainMonitoringDB
+db["supply"].find()
+use supplyChainMonitoringDB
+already on db supplyChainMonitoringDB
+// Insert Sample Shipment Log Documents
+db.shipment_logs.insertMany([
+    {
+        order_id: 1,
+        shipment_ref: "SHP-001-XYZ",
+        carrier: "FedEx",
+        status: "Delivered",
+        origin: "TX Distribution Center",
+        destination: "NY Manufacturing Plant",
+        tracking_events: [
+            { timestamp: new ISODate("2025-10-20T10:00:00Z"), location: "Warehouse A", description: "Package ready for pickup" },
+            { timestamp: new ISODate("2025-10-21T15:30:00Z"), location: "Dallas Hub", description: "In Transit" },
+            { timestamp: new ISODate("2025-10-24T09:00:00Z"), location: "Final Destination", description: "Delivered" }
+        ],
+        estimated_arrival: new ISODate("2025-10-25T09:00:00Z"),
+        actual_arrival: new ISODate("2025-10-24T09:00:00Z"),
+        last_updated: new ISODate("2025-10-24T09:00:00Z")
+    },
+    {
+        order_id: 2,
+        shipment_ref: "SHP-002-UVW",
+        carrier: "UPS",
+        status: "Delayed",
+        origin: "CA Port",
+        destination: "NY Manufacturing Plant",
+        tracking_events: [
+            { timestamp: new ISODate("2025-10-22T12:00:00Z"), location: "CA Port", description: "Departed Port" },
+            { timestamp: new ISODate("2025-10-24T18:00:00Z"), location: "Reroute Center", description: "Delay: Weather Incident" }
+        ],
+        estimated_arrival: new ISODate("2025-10-28T10:00:00Z"),
+        actual_arrival: null,
+        last_updated: new ISODate("2025-10-24T18:00:00Z")
+    }
+]);
+
+
+{
+  acknowledged: true,
+  insertedIds: {
+    '0': ObjectId('68fca4e094a4fb8244e40732'),
+    '1': ObjectId('68fca4e094a4fb8244e40733')
+  }
+}
+// INDEX CREATION
+db.shipment_logs.createIndex({ order_id: 1 });
+db.shipment_logs.createIndex({ status: 1, last_updated: -1 });
+db.shipment_logs.createIndex({ "tracking_events.description": 1 });
+tracking_events.description_1
+
+
