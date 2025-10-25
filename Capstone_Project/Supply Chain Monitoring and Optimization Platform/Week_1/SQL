@@ -1,0 +1,138 @@
+CREATE DATABASE IF NOT EXISTS supply_chain_db;
+USE supply_chain_db;
+
+-- 1. Suppliers Table
+CREATE TABLE Suppliers (
+    supplier_id INT PRIMARY KEY AUTO_INCREMENT,
+    supplier_name VARCHAR(100) NOT NULL,
+    contact_name VARCHAR(100),
+    contact_email VARCHAR(100) UNIQUE,
+    phone VARCHAR(20)
+);
+
+-- 2. Inventory Table
+CREATE TABLE Inventory (
+    item_id INT PRIMARY KEY AUTO_INCREMENT,
+    supplier_id INT,
+    item_name VARCHAR(100) NOT NULL,
+    stock_level INT NOT NULL DEFAULT 0,
+    reorder_level INT NOT NULL,
+    unit_price DECIMAL(10, 2) NOT NULL,
+    FOREIGN KEY (supplier_id) REFERENCES Suppliers(supplier_id)
+);
+
+-- 3. Orders Table
+CREATE TABLE Orders (
+    order_id INT PRIMARY KEY AUTO_INCREMENT,
+    item_id INT,
+    supplier_id INT,
+    order_date DATE NOT NULL,
+    expected_delivery_date DATE,
+    actual_delivery_date DATE,
+    quantity_ordered INT NOT NULL,
+    order_status VARCHAR(50) NOT NULL DEFAULT 'Pending', -- e.g., 'Pending', 'Shipped', 'Delivered', 'Cancelled'
+    FOREIGN KEY (item_id) REFERENCES Inventory(item_id),
+    FOREIGN KEY (supplier_id) REFERENCES Suppliers(supplier_id)
+);
+
+-- CRUD - CREATE (Sample Inserts)
+INSERT INTO Suppliers (supplier_name, contact_email, phone)
+VALUES ('Global Parts Co', 'contact@globalparts.com', '555-0101');
+
+INSERT INTO Inventory (supplier_id, item_name, stock_level, reorder_level, unit_price)
+VALUES (1, 'Raw Material X', 500, 100, 15.50);
+
+INSERT INTO Orders (item_id, supplier_id, order_date, expected_delivery_date, quantity_ordered)
+VALUES (1, 1, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 7 DAY), 200);
+
+-- CRUD - READ (Select)
+SELECT * FROM Orders WHERE order_status = 'Pending';
+SELECT i.item_name, i.stock_level, s.supplier_name
+FROM Inventory i JOIN Suppliers s ON i.supplier_id = s.supplier_id
+WHERE i.stock_level <= i.reorder_level;
+
+-- CRUD - UPDATE
+UPDATE Orders
+SET actual_delivery_date = CURDATE(), order_status = 'Delivered'
+WHERE order_id = 1;
+
+-- CRUD - DELETE
+-- 1. Temporarily disable MySQL's Safe Update Mode (Error Code 1175 guardrail)
+SET SQL_SAFE_UPDATES = 0;
+
+-- 2. Execute the DELETE statement based on non-key columns (status and date)
+--    This deletes all 'Cancelled' orders older than 365 days.
+DELETE FROM Orders 
+WHERE order_status = 'Cancelled' 
+  AND order_date < DATE_SUB(CURDATE(), INTERVAL 365 DAY);
+
+-- 3. Re-enable Safe Update Mode for safety against accidental mass updates/deletes
+SET SQL_SAFE_UPDATES = 1;
+
+-- 4. Verify the deletion (optional)
+SELECT COUNT(*) FROM Orders WHERE order_status = 'Cancelled' AND order_date < DATE_SUB(CURDATE(), INTERVAL 365 DAY);
+-- The count should be 0 if all records were deleted.
+
+-- -----------------------------------------------------------
+-- 3. STORED PROCEDURE: CheckAndReorder
+-- -----------------------------------------------------------
+-- Checks inventory and creates a new order if stock is below reorder_level.
+DELIMITER //
+
+CREATE PROCEDURE CheckAndReorder(IN p_item_id INT)
+BEGIN
+    DECLARE current_stock INT;
+    DECLARE reorder_lvl INT;
+    DECLARE reorder_qty INT DEFAULT 500; -- Fixed reorder quantity for simplicity
+    DECLARE sup_id INT;
+    DECLARE pending_orders INT;
+
+    -- Get necessary inventory details
+    SELECT stock_level, reorder_level, supplier_id
+    INTO current_stock, reorder_lvl, sup_id
+    FROM Inventory
+    WHERE item_id = p_item_id;
+
+    -- Check for any pending orders for the same item/supplier to prevent over-ordering
+    SELECT COUNT(*) INTO pending_orders
+    FROM Orders
+    WHERE item_id = p_item_id AND supplier_id = sup_id AND order_status = 'Pending';
+
+    -- Logic to auto-reorder
+    IF current_stock <= reorder_lvl AND pending_orders = 0 THEN
+        INSERT INTO Orders (item_id, supplier_id, order_date, expected_delivery_date, quantity_ordered, order_status)
+        VALUES (p_item_id, sup_id, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 14 DAY), reorder_qty, 'Pending');
+        
+        -- Confirmation message
+        SELECT CONCAT('AUTO REORDER TRIGGERED for Item ID: ', p_item_id, ' Quantity: ', reorder_qty) AS Message;
+    ELSE
+        SELECT CONCAT('Reorder check complete for Item ID: ', p_item_id, '. Stock is sufficient or a pending order exists.') AS Message;
+    END IF;
+END //
+
+DELIMITER ;
+
+
+-- -----------------------------------------------------------
+-- 4. TRIGGER: after_order_delivery
+-- -----------------------------------------------------------
+-- An AFTER UPDATE trigger to maintain stock and initiate the reorder check.
+DELIMITER //
+
+CREATE TRIGGER after_order_delivery
+AFTER UPDATE ON Orders
+FOR EACH ROW
+BEGIN
+    -- Check if the order status changed to 'Delivered'
+    IF NEW.order_status = 'Delivered' AND OLD.order_status <> 'Delivered' THEN
+        -- 1. Increase the stock level by the delivered quantity
+        UPDATE Inventory
+        SET stock_level = stock_level + NEW.quantity_ordered
+        WHERE item_id = NEW.item_id;
+        
+        -- 2. Call the stored procedure to check if a *new* reorder is needed
+        CALL CheckAndReorder(NEW.item_id);
+    END IF;
+END //
+
+DELIMITER ;
