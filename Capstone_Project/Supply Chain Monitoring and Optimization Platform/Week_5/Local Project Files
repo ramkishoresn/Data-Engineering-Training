@@ -1,0 +1,41 @@
+Prerequisites: Local Project Files
+Before running the pipeline, you need two files committed to the main branch of your Azure DevOps Git repository:
+1. requirements.txt (Dependencies)
+This file tells the pipeline which Python packages to install (pandas, numpy, requests) so your Week 2 script can run.
+Plaintext
+# requirements.txt
+pandas
+numpy
+requests
+2. run_pipeline.py (Execution Script)
+This is a conceptual Python file that combines the core logic of your Week 2 script and prints the final result, which the pipeline will log.
+Python
+# run_pipeline.py
+import pandas as pd
+import numpy as np
+import requests
+from datetime import datetime
+
+# --- NOTE: Replace this with your actual Week 2 data fetching/processing logic ---
+def main():
+    print("--- Starting Supply Chain Monitoring Script ---")
+    
+    # Simulate loading data
+    data = [
+        {"order_id": 103, "supplier_id": "S001", "quantity": 250, "delivery_date": "2025-10-23", "price": 10.00},
+        {"order_id": 107, "supplier_id": "S003", "quantity": 90, "delivery_date": "2025-09-01", "price": 45.00}
+    ]
+    df = pd.DataFrame(data)
+    
+    # Process data (simulate key Week 2 transformation)
+    df['delivery_date'] = pd.to_datetime(df['delivery_date']) 
+    df['delay_days'] = (pd.Timestamp(datetime.now()) - df['delivery_date']).dt.days
+    df['is_delayed'] = np.where(df['delay_days'] > 0, 1, 0)
+
+    # Log the results (Logs the results and marks completion)
+    print("\n--- FINAL PROCESSED RESULTS (Logged) ---")
+    print(df[['order_id', 'supplier_id', 'delay_days', 'is_delayed']].head())
+    print("\n*** Supply Chain Script Execution Complete ***")
+
+if __name__ == "__main__":
+    main()
