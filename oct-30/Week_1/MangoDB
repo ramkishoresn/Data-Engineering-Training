@@ -1,0 +1,39 @@
+use retail_capstone_mongo;
+switched to db retail_capstone_mongo
+db.feedback.insertMany([
+{
+product_id: 1,
+customer_id: 'CUST-001',
+rating: 4,
+feedback_text: 'Good quality, comfortable. Would buy again.',
+tags: ['quality','comfort'],
+created_at: new Date('2025-10-02T10:00:00Z')
+},
+{
+product_id: 2,
+customer_id: 'CUST-002',
+rating: 2,
+feedback_text: 'Too tight around the waist, consider sizing changes.',
+tags: ['size','fit'],
+created_at: new Date('2025-10-05T12:30:00Z')
+},
+{
+product_id: 3,
+customer_id: 'SUPP-001',
+rating: null,
+feedback_text: 'Delay in shipment for last order #ORD-4321.',
+tags: ['logistics','delay'],
+created_at: new Date()
+}
+]);
+
+
+// Create an index to speed up queries by product_id
+db.feedback.createIndex({ product_id: 1 });
+product_id_1
+db.feedback.find().pretty();
+db.feedback.getIndexes();
+[
+  { v: 2, key: { _id: 1 }, name: '_id_' },
+  { v: 2, key: { product_id: 1 }, name: 'product_id_1' }
+]
