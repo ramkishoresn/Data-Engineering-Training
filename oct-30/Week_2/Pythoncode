@@ -1,0 +1,87 @@
+import pandas as pd
+import numpy as np
+from datetime import datetime
+
+sales = pd.read_csv('sales.csv')
+inventory = pd.read_csv('inventory.csv')
+
+
+# === Step 2: Data Cleaning ===
+# Handle missing values
+sales.fillna({'customer_id': 'UNKNOWN', 'channel': 'store'}, inplace=True)
+inventory.fillna({'warehouse': 'main', 'quantity': 0}, inplace=True)
+
+sales['sale_date'] = pd.to_datetime(sales['sale_date'], errors='coerce')
+inventory['last_updated'] = pd.to_datetime(inventory['last_updated'], errors='coerce')
+
+
+# Remove invalid rows (if any)
+sales = sales.dropna(subset=['sale_date'])
+
+
+# === Step 3: Feature Engineering ===
+# Extract month and year for grouping
+sales['year_month'] = sales['sale_date'].dt.to_period('M')
+
+
+# Total sales value per transaction
+sales['total_sale_value'] = sales['quantity'] * sales['sale_price']
+
+
+# === Step 4: Monthly Aggregation ===
+monthly_sales = (
+sales.groupby('year_month')['total_sale_value']
+.sum()
+.reset_index()
+.rename(columns={'total_sale_value': 'monthly_sales'})
+)
+
+
+# === Step 5: Inventory Turnover ===
+# Simplified formula: turnover = total_sold / avg_inventory
+sales_qty = sales.groupby('product_id')['quantity'].sum().reset_index(name='total_sold')
+
+
+inventory_avg = (
+inventory.groupby('product_id')['quantity']
+.mean()
+.reset_index(name='avg_inventory')
+)
+
+
+turnover = pd.merge(sales_qty, inventory_avg, on='product_id', how='left')
+turnover['inventory_turnover'] = np.where(
+turnover['avg_inventory'] > 0,
+turnover['total_sold'] / turnover['avg_inventory'],
+np.nan
+)
+
+
+# === Step 6: Performance Reports ===
+# Top 5 best-selling products
+report_top_selling = (
+sales.groupby('product_id')['total_sale_value']
+.sum()
+.reset_index()
+.sort_values(by='total_sale_value', ascending=False)
+.head(5)
+)
+
+
+# Underperforming products (low sales or low turnover)
+underperforming = turnover[(turnover['inventory_turnover'] < 0.5) | (turnover['total_sold'] < 5)]
+
+
+# === Step 7: Save Outputs ===
+monthly_sales.to_csv('processed_monthly_sales.csv', index=False)
+turnover.to_csv('processed_turnover.csv', index=False)
+report_top_selling.to_csv('top_selling_products.csv', index=False)
+underperforming.to_csv('underperforming_products.csv', index=False)
+
+
+print("✅ Data processing complete. Reports generated:")
+print(" - processed_monthly_sales.csv")
+print(" - processed_turnover.csv")
+print(" - top_selling_products.csv")
+print(" - underperforming_products.csv")
+
