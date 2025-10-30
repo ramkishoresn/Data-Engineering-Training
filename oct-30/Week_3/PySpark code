@@ -1,0 +1,67 @@
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col, sum as _sum, avg as _avg
+from google.colab import files
+
+# Upload files manually — you’ll get a file picker
+uploaded = files.upload()
+
+
+
+# === Step 1: Initialize Spark Session ===
+spark = SparkSession.builder \
+.appName("Retail Insights") \
+.getOrCreate()
+
+
+sales_path = "/content/sales.csv"
+inventory_path = "/content/inventory.csv"
+products_path = "/content/products.csv"
+
+
+sales_df = spark.read.option("header", True).csv(sales_path, inferSchema=True)
+inventory_df = spark.read.option("header", True).csv(inventory_path, inferSchema=True)
+
+
+# Example product data if not already available
+products_data = [
+(1, 'Classic White T-Shirt', 'Apparel', 'South', 199.00),
+(2, 'Blue Jeans', 'Apparel', 'North', 999.00),
+(3, 'Wireless Mouse', 'Accessories', 'West', 599.00)
+]
+products_columns = ["product_id", "name", "category", "region", "unit_price"]
+products_df = spark.createDataFrame(products_data, products_columns)
+
+
+# === Step 3: Data Joins ===
+# Join sales with products and inventory to combine all relevant info
+sales_joined = sales_df.join(products_df, on="product_id", how="left")
+inventory_joined = inventory_df.join(products_df, on="product_id", how="left")
+
+
+# === Step 4: Sales Trend Analysis ===
+# Compute category-wise sales by region
+category_sales = sales_joined.groupBy("region", "category").agg(
+_sum(col("quantity") * col("sale_price")).alias("total_sales_value"),
+_sum("quantity").alias("total_quantity"),
+_avg("sale_price").alias("avg_sale_price")
+)
+
+
+# Sort results for clarity
+category_sales = category_sales.orderBy("region", "category")
+
+
+# === Step 5: Export Results ===
+# Export to CSV
+category_sales.coalesce(1).write.mode("overwrite").option("header", True).csv("category_sales_by_region.csv")
+
+
+# Optionally export as Parquet for Databricks or analytics use
+category_sales.write.mode("overwrite").parquet("category_sales_by_region.parquet")
+
+
+# Show sample output
+category_sales.show()
+
+
+spark.stop()
