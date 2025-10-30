@@ -1,0 +1,5 @@
+inventory_id,product_id,warehouse,quantity,last_updated
+1,1,main,35,2025-10-01 09:00:00
+2,2,main,8,2025-10-01 09:00:00
+3,3,main,12,2025-10-01 09:00:00
+4,2,warehouse-b,5,2025-10-01 09:00:00
