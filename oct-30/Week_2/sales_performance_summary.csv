@@ -1,0 +1,4 @@
+product_id,total_sold,total_sale_value,avg_inventory,inventory_turnover,performance_category
+1,2,398.00,35.0,0.06,Underperforming
+2,1,999.00,6.5,0.15,Underperforming
+3,3,1797.00,12.0,0.25,Underperforming
