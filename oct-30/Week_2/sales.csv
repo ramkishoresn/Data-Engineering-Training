@@ -1,0 +1,4 @@
+product_id,sale_date,quantity,sale_price,customer_id,channel
+1,'2025-10-01 10:15:00',2,199.00,'CUST-001','online'
+2,'2025-10-02 14:30:00',1,999.00,'CUST-002','store'
+3,'2025-10-03 11:00:00',3,599.00,'CUST-003','online'
